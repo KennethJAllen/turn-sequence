@@ -2,9 +2,10 @@ import os
 import random
 import requests
 from dotenv import load_dotenv
+from src import utils
 
 def check_for_errors(maps_data: dict) -> None:
-    """Raises """
+    """Raises RuntimeError if API returned 'error_message'."""
     if 'error_message' in maps_data:
         raise RuntimeError(f"API Error: {maps_data['error_message']}")
 
@@ -32,13 +33,13 @@ def geocode_city(city_name, maps_api_key) -> tuple[float, float, float, float]:
 
     return south, west, north, east
 
-def compute_routes(start, end, api_key):
+def compute_routes(points, api_key):
     """
     Calls the Google Routes API to retrieve route information
-    between start and end points. Returns a list of maneuvers
-    (e.g., 'TURN_LEFT', 'TURN_RIGHT').
+    between origins.
+    Returns response data.
     """
-    routes_url = "https://routes.googleapis.com/directions/v2:computeRoutes"
+    routes_url = "https://routes.googleapis.com/directions/v2:ComputeRouteMatrix"
     
     headers = {
         "Content-Type": "application/json; charset=UTF-8",
@@ -47,34 +48,21 @@ def compute_routes(start, end, api_key):
     }
 
     # Construct the POST body for the Routes API
+    waypoint_dicts = utils.points_to_waypoints(points)
     body = {
-        "origin": {
-            "location": {
-                "latLng": {
-                    "latitude": start[0],
-                    "longitude": start[1]
-                }
-            }
-        },
-        "destination": {
-            "location": {
-                "latLng": {
-                    "latitude": end[0],
-                    "longitude": end[1]
-                }
-            }
-        },
+        "origins": waypoint_dicts,
+        "destinations": waypoint_dicts,
         "travelMode": "DRIVE",
-        "computeAlternativeRoutes": False
-        #"routingPreference": "TRAFFIC_UNAWARE"
+        "computeAlternativeRoutes": False,
+        "routingPreference": "TRAFFIC_UNAWARE"
     }
 
     # Make the POST request
     response = requests.post(routes_url, headers=headers, json=body, timeout=15)
     response.raise_for_status()
-    data = response.json()
-    check_for_errors(data)
-    return data
+    route_data = response.json()
+    check_for_errors(route_data)
+    return route_data
 
 
 def process_directions(routes: dict) -> list[int]:
@@ -116,6 +104,7 @@ def alternating_metric(turns: list[int]) -> float:
     return num_alternating/(len(turns) - 1)
 
 def main():
+    """Main access point to the script."""
     # loads variables from .env
     load_dotenv()
     maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
@@ -124,18 +113,21 @@ def main():
     city_name = "new york city"
     # TODO: Only compute if not in config
     city_bounds = geocode_city(city_name, maps_api_key)
-    num_iteration = 100
+    num_iteration = 5
     num_valid_routes = 0
     total_frac_alternating = 0
+    points = []
     for _ in range(num_iteration):
         start = random_point_in_bounds(*city_bounds)
         end = random_point_in_bounds(*city_bounds)
-        routes = compute_routes(start, end, maps_api_key)
-        turns = process_directions(routes)
-        frac_alternating = alternating_metric(turns)
-        if frac_alternating:
-            num_valid_routes += 1
-            total_frac_alternating += frac_alternating
+        points.append((start, end))
+
+    route_data = compute_routes(points, maps_api_key)
+    turns = process_directions(route_data)
+    frac_alternating = alternating_metric(turns)
+    if frac_alternating:
+        num_valid_routes += 1
+        total_frac_alternating += frac_alternating
 
     average_frac_alternating = total_frac_alternating/num_valid_routes
     print(f"Average fraction of alternating instructions: {average_frac_alternating} for {city_name}")

@@ -9,3 +9,7 @@ dependencies = [
     "googlemaps>=4.10.0",
     "sqlalchemy>=2.0.39",
 ]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

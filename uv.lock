@@ -59,7 +59,7 @@ wheels = [
 [[package]]
 name = "driving-turn-sequence-analysis"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "dotenv" },
     { name = "googlemaps" },
