@@ -38,16 +38,15 @@ def compute_routes(start, end, api_key):
     between start and end points. Returns a list of maneuvers
     (e.g., 'TURN_LEFT', 'TURN_RIGHT').
     """
-    routes_url = f"https://routes.googleapis.com/directions/v2:computeRoutes"
+    routes_url = "https://routes.googleapis.com/directions/v2:computeRoutes"
     
     headers = {
         "Content-Type": "application/json; charset=UTF-8",
         "X-Goog-Api-Key": api_key,
-        "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline"
+        "X-Goog-FieldMask": "routes.legs.steps.navigationInstruction(maneuver)"
     }
 
     # Construct the POST body for the Routes API
-    # This is a minimal example for 'DRIVE' mode. You can add more fields as needed.
     body = {
         "origin": {
             "location": {
@@ -66,7 +65,8 @@ def compute_routes(start, end, api_key):
             }
         },
         "travelMode": "DRIVE",
-        "routingPreference": "TRAFFIC_AWARE"
+        "computeAlternativeRoutes": False
+        #"routingPreference": "TRAFFIC_UNAWARE"
     }
 
     # Make the POST request
@@ -77,14 +77,21 @@ def compute_routes(start, end, api_key):
     return data
 
 
-def process_directions(routes: dict) -> list[str]:
-    """Processes google maps """
-    route = routes["routes"][0]
-
-    distance_meters = route["distanceMeters"]          # e.g. 51734
-    duration_seconds = int(route["duration"][:-1])     # "2847s" -> 2847 (seconds)
-    encoded_polyline = route["polyline"]["encodedPolyline"]
-    turns = [] # PLACEHOLDER
+def process_directions(routes: dict) -> list[int]:
+    """
+    Processes google maps route. Returns sequence of 1s and 0s from instructions,
+    1 if there was a right turn, 0 if there was a left turn, skips otherwise.
+    """
+    if not routes:
+        return []
+    route = routes["routes"][0]['legs'][0]['steps']
+    maneuvers = [instruction['navigationInstruction']['maneuver'] for instruction in route if instruction]
+    turns = []
+    for m in maneuvers:
+        if "LEFT" in m:
+            turns.append(0)
+        elif "RIGHT" in m:
+            turns.append(1)
     return turns
 
 
@@ -97,20 +104,42 @@ def random_point_in_bounds(south, west, north, east):
     lng = random.uniform(west, east)
     return lat, lng
 
+def alternating_metric(turns: list[int]) -> float:
+    """Returns fraction of turns that alternate either LEFT -> RIGHT or RIGHT -> LEFT."""
+    if not turns or len(turns) == 1:
+        return
+    num_alternating = 0
+    for index, turn in enumerate(turns[:-1]):
+        if turn != turns[index+1]:
+            # If the turns are the different, increment
+            num_alternating += 1
+    return num_alternating/(len(turns) - 1)
+
 def main():
     # loads variables from .env
     load_dotenv()
     maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
 
     # TODO: Add city/state
-    city_name = "boston"
+    city_name = "new york city"
     # TODO: Only compute if not in config
     city_bounds = geocode_city(city_name, maps_api_key)
-    start = random_point_in_bounds(*city_bounds)
-    end = random_point_in_bounds(*city_bounds)
-    routes = compute_routes(start, end, maps_api_key)
-    turns = process_directions(routes)
-    pass
+    num_iteration = 100
+    num_valid_routes = 0
+    total_frac_alternating = 0
+    for _ in range(num_iteration):
+        start = random_point_in_bounds(*city_bounds)
+        end = random_point_in_bounds(*city_bounds)
+        routes = compute_routes(start, end, maps_api_key)
+        turns = process_directions(routes)
+        frac_alternating = alternating_metric(turns)
+        if frac_alternating:
+            num_valid_routes += 1
+            total_frac_alternating += frac_alternating
+
+    average_frac_alternating = total_frac_alternating/num_valid_routes
+    print(f"Average fraction of alternating instructions: {average_frac_alternating} for {city_name}")
+
     # TODO: Store data in sqlite with sqlalchemy
 
 
