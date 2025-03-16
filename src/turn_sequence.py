@@ -1,6 +1,7 @@
 import os
 import random
 import requests
+from pprint import pprint
 from dotenv import load_dotenv
 from src import utils
 
@@ -39,12 +40,12 @@ def compute_routes(points, api_key):
     between origins.
     Returns response data.
     """
-    routes_url = "https://routes.googleapis.com/directions/v2:ComputeRouteMatrix"
+    routes_url = 'https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix'
     
     headers = {
         "Content-Type": "application/json; charset=UTF-8",
         "X-Goog-Api-Key": api_key,
-        "X-Goog-FieldMask": "routes.legs.steps.navigationInstruction(maneuver)"
+        "X-Goog-FieldMask": "originIndex,destinationIndex,duration,distanceMeters,status,condition"
     }
 
     # Construct the POST body for the Routes API
@@ -53,9 +54,9 @@ def compute_routes(points, api_key):
         "origins": waypoint_dicts,
         "destinations": waypoint_dicts,
         "travelMode": "DRIVE",
-        "computeAlternativeRoutes": False,
         "routingPreference": "TRAFFIC_UNAWARE"
     }
+    pprint(body)
 
     # Make the POST request
     response = requests.post(routes_url, headers=headers, json=body, timeout=15)
@@ -103,6 +104,14 @@ def alternating_metric(turns: list[int]) -> float:
             num_alternating += 1
     return num_alternating/(len(turns) - 1)
 
+def get_points(num_points: int, bounds):
+    """Returns num_points random points within bounds"""
+    points = []
+    for _ in range(num_points):
+        point = random_point_in_bounds(*bounds)
+        points.append(point)
+    return points
+
 def main():
     """Main access point to the script."""
     # loads variables from .env
@@ -111,20 +120,19 @@ def main():
 
     # TODO: Add city/state
     city_name = "new york city"
-    # TODO: Only compute if not in config
+    # TODO: Only compute if not in db config
+    # TODO: reject point if not valid
+    
     city_bounds = geocode_city(city_name, maps_api_key)
-    num_iteration = 5
-    num_valid_routes = 0
-    total_frac_alternating = 0
-    points = []
-    for _ in range(num_iteration):
-        start = random_point_in_bounds(*city_bounds)
-        end = random_point_in_bounds(*city_bounds)
-        points.append((start, end))
+    num_points = 2
+    points = get_points(num_points, city_bounds)
 
     route_data = compute_routes(points, maps_api_key)
     turns = process_directions(route_data)
     frac_alternating = alternating_metric(turns)
+
+    num_valid_routes = 0
+    total_frac_alternating = 0
     if frac_alternating:
         num_valid_routes += 1
         total_frac_alternating += frac_alternating
