@@ -1,43 +1,19 @@
 import os
-import random
-import requests
 from pprint import pprint
+import requests
 from dotenv import load_dotenv
+from shapely.geometry import Point
 from src import utils
+from src.city_sampler import CityPoints
 
 def check_for_errors(maps_data: dict) -> None:
-    """Raises RuntimeError if API returned 'error_message'."""
+    """Raises RuntimeError if Google API returned 'error_message'."""
     if 'error_message' in maps_data:
-        raise RuntimeError(f"API Error: {maps_data['error_message']}")
+        raise RuntimeError(f"Google API Error: {maps_data['error_message']}")
 
-def geocode_city(city_name, maps_api_key) -> tuple[float, float, float, float]:
+def compute_routes(points: list[Point], api_key):
     """
-    Returns bounding box (south, west, north, east) of the city
-    using the Google Geocoding API.
-    """
-    base_url = "https://maps.googleapis.com/maps/api/geocode/json"
-    params = {
-        "address": city_name,
-        "key": maps_api_key
-    }
-    response = requests.get(base_url, params=params, timeout=15)
-    response.raise_for_status()
-    maps_data = response.json()
-    check_for_errors(maps_data)
-
-    # Approximate bounding box from geometry's viewport
-    viewport = maps_data["results"][0]["geometry"]["viewport"]
-    south = viewport["southwest"]["lat"]
-    west = viewport["southwest"]["lng"]
-    north = viewport["northeast"]["lat"]
-    east = viewport["northeast"]["lng"]
-
-    return south, west, north, east
-
-def compute_routes(points, api_key):
-    """
-    Calls the Google Routes API to retrieve route information
-    between origins.
+    Calls the Google Routes API to retrieve route information between origins.
     Returns response data.
     """
     routes_url = 'https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix'
@@ -49,7 +25,7 @@ def compute_routes(points, api_key):
     }
 
     # Construct the POST body for the Routes API
-    waypoint_dicts = utils.points_to_waypoints(points)
+    waypoint_dicts = utils.format_point_for_waypoints(points)
     body = {
         "origins": waypoint_dicts,
         "destinations": waypoint_dicts,
@@ -64,7 +40,6 @@ def compute_routes(points, api_key):
     route_data = response.json()
     check_for_errors(route_data)
     return route_data
-
 
 def process_directions(routes: dict) -> list[int]:
     """
@@ -83,20 +58,10 @@ def process_directions(routes: dict) -> list[int]:
             turns.append(1)
     return turns
 
-
-def random_point_in_bounds(south, west, north, east):
-    """
-    Returns a random lat/lng coordinate within the bounding box.
-    """
-    # TODO: Ensure sufficiently far away
-    lat = random.uniform(south, north)
-    lng = random.uniform(west, east)
-    return lat, lng
-
 def alternating_metric(turns: list[int]) -> float:
     """Returns fraction of turns that alternate either LEFT -> RIGHT or RIGHT -> LEFT."""
     if not turns or len(turns) == 1:
-        return
+        raise ValueError(f"Not enough turns provided: {turns}")
     num_alternating = 0
     for index, turn in enumerate(turns[:-1]):
         if turn != turns[index+1]:
@@ -104,13 +69,57 @@ def alternating_metric(turns: list[int]) -> float:
             num_alternating += 1
     return num_alternating/(len(turns) - 1)
 
-def get_points(num_points: int, bounds):
-    """Returns num_points random points within bounds"""
-    points = []
-    for _ in range(num_points):
-        point = random_point_in_bounds(*bounds)
-        points.append(point)
-    return points
+def get_valid_points(city_points: CityPoints, num_points: int, api_key: str) -> list[Point]:
+    """
+    Returns at most num_points from city points
+    Ensures each point is drivable withing the city
+    e.g., not in the water.
+    """
+    valid_points = []
+    num_valid_points = 0
+    for point in city_points.get_shuffled_grid_points():
+        snapped_point = snap_to_road(point, api_key)
+        if snapped_point is None:
+            continue
+        valid_points.append(snapped_point)
+        num_valid_points += 1
+        if len(valid_points) == num_points:
+            return valid_points
+    # If we have iterated through all points and have not found num_points valid points...
+    if not valid_points:
+        raise ValueError(f"Could not find any valid points for {city_points}")
+
+    print((f"Could not find {num_points} points in {city_points}.\n"
+           f"Found {len(valid_points)} valid points out of {len(city_points)}"))
+    return valid_points
+
+def snap_to_road(point: Point, api_key) -> Point:
+    """
+    Returns a (lat, lng) snapped to the nearest road, or None if no road is found.
+    """
+    lat = point.x
+    lon = point.y
+    base_url = "https://roads.googleapis.com/v1/snapToRoads"
+    params = {
+        "path": f"{lat},{lon}",
+        "interpolate": "false",
+        "key": api_key
+    }
+    response = requests.get(base_url, params=params, timeout=15)
+    response.raise_for_status()
+    data = response.json()
+    check_for_errors(data)
+
+    # 'snappedPoints' will be empty if there's no road within ~50m
+    snapped_points = data.get("snappedPoints", [])
+    if not snapped_points:
+        return None  # Means no road found near your point
+
+    # The first snapped point is the nearest road location
+    snapped_location = snapped_points[0]["location"]
+    snapped_lat = snapped_location["latitude"]
+    snapped_lon = snapped_location["longitude"]
+    return Point(snapped_lat, snapped_lon)
 
 def main():
     """Main access point to the script."""
@@ -118,14 +127,13 @@ def main():
     load_dotenv()
     maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
 
-    # TODO: Add city/state
-    city_name = "new york city"
+    city_name = "Philadelphia, Pennsylvania, USA"
+    granulariy = 10
     # TODO: Only compute if not in db config
-    # TODO: reject point if not valid
+    city_points = CityPoints(city_name, granulariy)
     
-    city_bounds = geocode_city(city_name, maps_api_key)
     num_points = 2
-    points = get_points(num_points, city_bounds)
+    points = get_valid_points(city_points, num_points, maps_api_key)
 
     route_data = compute_routes(points, maps_api_key)
     turns = process_directions(route_data)

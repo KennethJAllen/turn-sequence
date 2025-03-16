@@ -1,6 +1,7 @@
 """Utility functions"""
+from shapely.geometry import Point
 
-def points_to_waypoints(points: list[tuple[float, float]]) -> list[dict]:
+def format_point_for_waypoints(points: list[Point]) -> list[dict]:
     """
     Turns list of points (lat, lon) into list of waypoints
     formatted for input into the Routes Google API
@@ -11,8 +12,8 @@ def points_to_waypoints(points: list[tuple[float, float]]) -> list[dict]:
             "waypoint": {
                 "location": {
                     "latLng": {
-                        "latitude": point[0],
-                        "longitude": point[1]
+                        "latitude": point.x,
+                        "longitude": point.y
                         }}}}
         waypoint_dicts.append(waypoint_dict)
     return waypoint_dicts
