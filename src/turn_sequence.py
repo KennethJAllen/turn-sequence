@@ -1,75 +1,40 @@
 import os
 from pprint import pprint
+from itertools import product
 import requests
 from dotenv import load_dotenv
 from shapely.geometry import Point
 from src import utils
 from src.city_sampler import CityPoints
 
-def check_for_errors(maps_data: dict) -> None:
-    """Raises RuntimeError if Google API returned 'error_message'."""
-    if 'error_message' in maps_data:
-        raise RuntimeError(f"Google API Error: {maps_data['error_message']}")
-
-def compute_routes(points: list[Point], api_key):
+def get_route_data(origin: Point, destination: Point, api_key: str):
     """
-    Calls the Google Routes API to retrieve route information between origins.
-    Returns response data.
+    Given an origin and desitination as Point objects,
+    return the route data from Google Routes API.
+    Point.x is lattitude, Point.y is longitude.
     """
-    routes_url = 'https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix'
+    url = "https://routes.googleapis.com/directions/v2:computeRoutes"
+    if origin == destination:
+        raise ValueError("Origin and destination must be different.")
     
     headers = {
         "Content-Type": "application/json; charset=UTF-8",
         "X-Goog-Api-Key": api_key,
-        "X-Goog-FieldMask": "originIndex,destinationIndex,duration,distanceMeters,status,condition"
+        "X-Goog-FieldMask": (
+            "routes.legs.steps.navigationInstruction.maneuver"
+        )
     }
 
-    # Construct the POST body for the Routes API
-    waypoint_dicts = utils.format_point_for_waypoints(points)
-    body = {
-        "origins": waypoint_dicts,
-        "destinations": waypoint_dicts,
-        "travelMode": "DRIVE",
-        "routingPreference": "TRAFFIC_UNAWARE"
-    }
-    pprint(body)
+    body = utils.format_route_body(origin, destination)
 
-    # Make the POST request
-    response = requests.post(routes_url, headers=headers, json=body, timeout=15)
+    response = requests.post(url, headers=headers, json=body, timeout=15)
     response.raise_for_status()
     route_data = response.json()
-    check_for_errors(route_data)
+    utils.check_for_errors(route_data)
     return route_data
 
-def process_directions(routes: dict) -> list[int]:
-    """
-    Processes google maps route. Returns sequence of 1s and 0s from instructions,
-    1 if there was a right turn, 0 if there was a left turn, skips otherwise.
-    """
-    if not routes:
-        return []
-    route = routes["routes"][0]['legs'][0]['steps']
-    maneuvers = [instruction['navigationInstruction']['maneuver'] for instruction in route if instruction]
-    turns = []
-    for m in maneuvers:
-        if "LEFT" in m:
-            turns.append(0)
-        elif "RIGHT" in m:
-            turns.append(1)
-    return turns
 
-def alternating_metric(turns: list[int]) -> float:
-    """Returns fraction of turns that alternate either LEFT -> RIGHT or RIGHT -> LEFT."""
-    if not turns or len(turns) == 1:
-        raise ValueError(f"Not enough turns provided: {turns}")
-    num_alternating = 0
-    for index, turn in enumerate(turns[:-1]):
-        if turn != turns[index+1]:
-            # If the turns are the different, increment
-            num_alternating += 1
-    return num_alternating/(len(turns) - 1)
-
-def get_valid_points(city_points: CityPoints, num_points: int, api_key: str) -> list[Point]:
+def get_valid_city_points(city_points: CityPoints, num_points: int, api_key: str) -> list[Point]:
     """
     Returns at most num_points from city points
     Ensures each point is drivable withing the city
@@ -97,8 +62,8 @@ def snap_to_road(point: Point, api_key) -> Point:
     """
     Returns a (lat, lng) snapped to the nearest road, or None if no road is found.
     """
-    lat = point.x
-    lon = point.y
+    lon = point.x
+    lat = point.y
     base_url = "https://roads.googleapis.com/v1/snapToRoads"
     params = {
         "path": f"{lat},{lon}",
@@ -108,7 +73,7 @@ def snap_to_road(point: Point, api_key) -> Point:
     response = requests.get(base_url, params=params, timeout=15)
     response.raise_for_status()
     data = response.json()
-    check_for_errors(data)
+    utils.check_for_errors(data)
 
     # 'snappedPoints' will be empty if there's no road within ~50m
     snapped_points = data.get("snappedPoints", [])
@@ -121,35 +86,45 @@ def snap_to_road(point: Point, api_key) -> Point:
     snapped_lon = snapped_location["longitude"]
     return Point(snapped_lat, snapped_lon)
 
+def compute_alternating_turn_statistics(city_name: str, num_points: int, map_granulariy: int, api_key: str,) -> float:
+    """
+    Parameters:
+        - A city name in the form 'City, State, Country'
+        - Number of points to sample from the city
+        - Granularity of partitioning the city into points
+        - A Google API key with access to the Routes and Roads APIs
+    Returns
+        - Percentage of turns that alternate between left, right or right, left
+        for choices of two points as origin and destination.
+    """
+    city_points = CityPoints(city_name, map_granulariy)
+    points = get_valid_city_points(city_points, num_points, api_key)
+
+    print("Calculating turn sequences...")
+    all_double_turns = []
+    for origin, destination in product(points, points):
+        if origin == destination:
+            continue
+        route_data = get_route_data(origin, destination, api_key)
+        maneuvers = utils.get_maneuvers_from_routes(route_data)
+        turns = utils.get_turns_from_maneuvers(maneuvers)
+        double_turns = utils.get_double_turns(turns)
+        all_double_turns += double_turns
+
+    double_turn_frequency = utils.alternating_metric(all_double_turns)
+
+    return double_turn_frequency
+
 def main():
     """Main access point to the script."""
     # loads variables from .env
     load_dotenv()
     maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-
     city_name = "Philadelphia, Pennsylvania, USA"
-    granulariy = 10
-    # TODO: Only compute if not in db config
-    city_points = CityPoints(city_name, granulariy)
-    
-    num_points = 2
-    points = get_valid_points(city_points, num_points, maps_api_key)
-
-    route_data = compute_routes(points, maps_api_key)
-    turns = process_directions(route_data)
-    frac_alternating = alternating_metric(turns)
-
-    num_valid_routes = 0
-    total_frac_alternating = 0
-    if frac_alternating:
-        num_valid_routes += 1
-        total_frac_alternating += frac_alternating
-
-    average_frac_alternating = total_frac_alternating/num_valid_routes
-    print(f"Average fraction of alternating instructions: {average_frac_alternating} for {city_name}")
-
-    # TODO: Store data in sqlite with sqlalchemy
-
+    map_granulariy = 10
+    num_points = 5
+    alternating_turn_frequency = compute_alternating_turn_statistics(city_name, num_points, map_granulariy, maps_api_key)
+    print(f"Fraction of alternating turns: {alternating_turn_frequency} for {city_name}")
 
 if __name__ == "__main__":
     main()

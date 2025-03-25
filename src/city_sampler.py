@@ -13,10 +13,10 @@ class CityPoints:
     2) Splits bounding box into granulariy x granularity points
     3) Rejects points that are not within the city
     """
-    def __init__(self, city_name: str, granularity: int):
+    def __init__(self, city_name: str, map_granularity: int):
         self._name: str = city_name
         self._polygon: Polygon = self._get_city_polygon()
-        self._grid_points: list[Point] = self._grid_sample_polygon(granularity, granularity)
+        self._grid_points: list[Point] = self._grid_sample_polygon(map_granularity)
 
     def __str__(self):
         return self._name
@@ -43,15 +43,15 @@ class CityPoints:
 
         return city_polygon
 
-    def _grid_sample_polygon(self, num_x: int, num_y: int) -> list[Point]:
+    def _grid_sample_polygon(self, num: int) -> list[Point]:
         """
         Partitions the city into evenly spaces
         Returns a list of points spaced dx, dy apart inside the polygon.
         """
         print("Partioning city into evenly spaced points...")
         minx, miny, maxx, maxy = self._polygon.bounds
-        dx = (maxx - minx)/num_x
-        dy = (maxy - miny)/num_y
+        dx = (maxx - minx)/num
+        dy = (maxy - miny)/num
         points = []
         
         # Move through the bounding box in increments of dx, dy
