@@ -4,8 +4,8 @@ import requests
 from dotenv import load_dotenv
 from shapely.geometry import Point
 import pygsheets
-from src import utils
-from src.city_sampler import CityPoints
+from turn_sequence import utils
+from turn_sequence.city_sampler import CityPoints
 
 def get_route_data(origin: Point, destination: Point, api_key: str):
     """
