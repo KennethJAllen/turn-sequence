@@ -86,7 +86,7 @@ def snap_to_road(point: Point, api_key) -> Point:
     snapped_lon = snapped_location["longitude"]
     return Point(snapped_lat, snapped_lon)
 
-def compute_alternating_turn_statistics(city_name: str, num_points: int, map_granulariy: int, api_key: str,) -> float:
+def get_double_turns(city_name: str, num_points: int, map_granulariy: int, api_key: str,) -> float:
     """
     Parameters:
         - A city name in the form 'City, State, Country'
@@ -111,19 +111,20 @@ def compute_alternating_turn_statistics(city_name: str, num_points: int, map_gra
         double_turns = utils.get_double_turns(turns)
         all_double_turns += double_turns
 
-    double_turn_frequency = utils.alternating_metric(all_double_turns)
-
-    return double_turn_frequency
+    return all_double_turns
 
 def main():
     """Main access point to the script."""
+    from turn_sequence import analysis
     # loads variables from .env
     load_dotenv()
     maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     city_name = "Philadelphia, Pennsylvania, USA"
     map_granulariy = 10
     num_points = 5
-    alternating_turn_frequency = compute_alternating_turn_statistics(city_name, num_points, map_granulariy, maps_api_key)
+    all_double_turns = get_double_turns(city_name, num_points, map_granulariy, maps_api_key)
+
+    alternating_turn_frequency = analysis.alternating_metric(all_double_turns)
     print(f"Fraction of alternating turns: {alternating_turn_frequency} for {city_name}")
 
 if __name__ == "__main__":
