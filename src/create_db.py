@@ -1,9 +1,9 @@
 import os
-from pprint import pprint
 from itertools import product
 import requests
 from dotenv import load_dotenv
 from shapely.geometry import Point
+import pygsheets
 from src import utils
 from src.city_sampler import CityPoints
 
