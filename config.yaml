@@ -1,0 +1,9 @@
+paths:
+  oatuth_credentials: "~/.credentials/sheets_credentials.json"
+map:
+  cities: [
+    "Philadelphia, Pennsylvania, USA",
+    "Boston, Massachusetts, USA"
+    ]
+  granulariy: 10
+  num_points: 3

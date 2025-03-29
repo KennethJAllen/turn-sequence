@@ -1,11 +1,13 @@
 import os
 from itertools import product
+from pathlib import Path
 import requests
 from dotenv import load_dotenv
 from shapely.geometry import Point
 import pygsheets
 from turn_sequence import utils
 from turn_sequence.city_sampler import CityPoints
+from turn_sequence.config import load_config
 
 def get_route_data(origin: Point, destination: Point, api_key: str):
     """
@@ -116,18 +118,15 @@ def main():
     # load variables from .env
     load_dotenv()
     maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-    city_name = "Philadelphia, Pennsylvania, USA"
-    map_granulariy = 10
-    num_points = 3
+    config_path = Path.cwd() / "config.yaml"
+    config = load_config(config_path)
 
-    city_points = CityPoints(city_name, map_granulariy)
-    points = get_valid_city_points(city_points, num_points, maps_api_key)
+    for city in config.map.cities:
+        city_points = CityPoints(city, config.map.granulariy)
+        points = get_valid_city_points(city_points, config.map.num_points, maps_api_key)
 
-    all_double_turns = get_double_turns(points, maps_api_key)
-
-    # from turn_sequence import analysis
-    # alternating_turn_frequency = analysis.alternating_metric(all_double_turns)
-    # print(f"Fraction of alternating turns: {alternating_turn_frequency} for {city_name}")
+        all_double_turns = get_double_turns(points, maps_api_key)
+        print(all_double_turns)
 
 if __name__ == "__main__":
     main()
