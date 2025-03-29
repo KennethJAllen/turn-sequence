@@ -18,9 +18,9 @@ class CityPoints:
 
         # Get a GeoDataFrame of the boundary polygon
         gdf = ox.geocode_to_gdf(self._name)
+        self.osm_id = gdf['osm_id'][0]
         self._polygon: Polygon = gdf['geometry'][0]
         self._grid_points: list[Point] = self._grid_sample_polygon(map_granularity)
-        self.osm_id = gdf['osm_id'][0]
 
     def __str__(self):
         return self._name
