@@ -15,8 +15,12 @@ class CityPoints:
     """
     def __init__(self, city_name: str, map_granularity: int):
         self._name: str = city_name
-        self._polygon: Polygon = self._get_city_polygon()
+
+        # Get a GeoDataFrame of the boundary polygon
+        gdf = ox.geocode_to_gdf(self._name)
+        self._polygon: Polygon = gdf['geometry'][0]
         self._grid_points: list[Point] = self._grid_sample_polygon(map_granularity)
+        self.osm_id = gdf['osm_id'][0]
 
     def __str__(self):
         return self._name
@@ -33,15 +37,6 @@ class CityPoints:
             raise ValueError(f"No points found in city: {self._name}")
         random.shuffle(self._grid_points)
         return self._grid_points
-
-    def _get_city_polygon(self) -> Polygon:
-        """Generates the latlon coordinates that define a polygon for a given city."""
-        # Get a GeoDataFrame of the boundary polygon
-        print(f"Getting city polygon for: {self._name}")
-        gdf = ox.geocode_to_gdf(self._name)
-        city_polygon = gdf.iloc[0].geometry
-
-        return city_polygon
 
     def _grid_sample_polygon(self, num: int) -> list[Point]:
         """

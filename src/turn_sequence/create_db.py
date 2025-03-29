@@ -86,7 +86,7 @@ def snap_to_road(point: Point, api_key) -> Point:
     snapped_lon = snapped_location["longitude"]
     return Point(snapped_lat, snapped_lon)
 
-def get_double_turns(city_name: str, num_points: int, map_granulariy: int, api_key: str,) -> float:
+def get_double_turns(points: list[Point], api_key) -> float:
     """
     Parameters:
         - A city name in the form 'City, State, Country'
@@ -97,9 +97,7 @@ def get_double_turns(city_name: str, num_points: int, map_granulariy: int, api_k
         - Percentage of turns that alternate between left, right or right, left
         for choices of two points as origin and destination.
     """
-    city_points = CityPoints(city_name, map_granulariy)
-    points = get_valid_city_points(city_points, num_points, api_key)
-
+    
     print("Calculating turn sequences...")
     all_double_turns = []
     for origin, destination in product(points, points):
@@ -115,17 +113,21 @@ def get_double_turns(city_name: str, num_points: int, map_granulariy: int, api_k
 
 def main():
     """Main access point to the script."""
-    from turn_sequence import analysis
-    # loads variables from .env
+    # load variables from .env
     load_dotenv()
     maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     city_name = "Philadelphia, Pennsylvania, USA"
     map_granulariy = 10
-    num_points = 5
-    all_double_turns = get_double_turns(city_name, num_points, map_granulariy, maps_api_key)
+    num_points = 3
 
-    alternating_turn_frequency = analysis.alternating_metric(all_double_turns)
-    print(f"Fraction of alternating turns: {alternating_turn_frequency} for {city_name}")
+    city_points = CityPoints(city_name, map_granulariy)
+    points = get_valid_city_points(city_points, num_points, maps_api_key)
+
+    all_double_turns = get_double_turns(points, maps_api_key)
+
+    # from turn_sequence import analysis
+    # alternating_turn_frequency = analysis.alternating_metric(all_double_turns)
+    # print(f"Fraction of alternating turns: {alternating_turn_frequency} for {city_name}")
 
 if __name__ == "__main__":
     main()
