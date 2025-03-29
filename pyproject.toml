@@ -1,5 +1,5 @@
 [project]
-name = "turn-sequence"
+name = "turn_sequence"
 version = "0.1.0"
 description = "Analyze the patterns in consecutive turns given by driving instructions."
 readme = "README.md"
@@ -9,6 +9,7 @@ dependencies = [
     "googlemaps>=4.10.0",
     "osmnx>=2.0.1",
     "pygsheets>=2.0.6",
+    "pylint>=3.3.6",
     "shapely>=2.0.7",
     "sqlalchemy>=2.0.39",
 ]
