@@ -5,8 +5,18 @@ from pathlib import Path
 import yaml
 
 @dataclass
-class Paths:
+class PathConfig:
     oatuth_credentials: Path
+
+@dataclass
+class SheetConfig:
+    name: str
+    city_worksheet: str
+    point_worksheet: str
+    directions_worksheet: str
+    city_columns: list[str]
+    point_columns: list[str]
+    directions_columns: list[str]
 
 @dataclass
 class MapConfig:
@@ -16,7 +26,8 @@ class MapConfig:
 
 @dataclass
 class Config:
-    paths: Paths
+    paths: PathConfig
+    sheets: SheetConfig
     map: MapConfig
 
 def load_config(file_path: Path) -> Config:
@@ -24,10 +35,11 @@ def load_config(file_path: Path) -> Config:
     with file_path.open('r') as f:
         data = yaml.safe_load(f)
 
-    paths = Paths(oatuth_credentials=Path(data['paths']['oatuth_credentials']).expanduser())
+    paths = PathConfig(oatuth_credentials=Path(data['paths']['oatuth_credentials']).expanduser())
+    sheets = SheetConfig(**data['sheets'])
     map_config = MapConfig(**data['map'])
 
-    return Config(paths=paths, map=map_config)
+    return Config(sheets=sheets, map=map_config, paths=paths)
 
 if __name__ == '__main__':
     config_path = Path.cwd() / "config.yaml"

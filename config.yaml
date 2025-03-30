@@ -1,5 +1,13 @@
 paths:
-  oatuth_credentials: "~/.credentials/sheets_credentials.json"
+  oatuth_credentials: "~/.credentials/sheets_oauth.json"
+sheets:
+  name: "TurnSequence"
+  city_worksheet: "Cities"
+  point_worksheet: "Points"
+  directions_worksheet: "Directions"
+  city_columns: ["osm_id", "name", "state", "country", "polygon"]
+  point_columns: ["osm_id", "snapped_lat", "snapped_lon", "original_lat", "original_lon"]
+  directions_columns: ["origin_id", "desination_id", "raw_directions", "left_right_directions"]
 map:
   cities: [
     "Philadelphia, Pennsylvania, USA",
