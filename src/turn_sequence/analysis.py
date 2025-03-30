@@ -1,4 +1,7 @@
 """Turn sequence analysis module."""
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 
 def alternating_metric(double_turns: list[str]) -> float:
     """Returns fraction of turns that alternate either LEFT -> RIGHT or RIGHT -> LEFT."""

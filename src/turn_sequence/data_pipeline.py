@@ -9,7 +9,7 @@ import pygsheets
 from pygsheets.exceptions import SpreadsheetNotFound, WorksheetNotFound
 from pygsheets import Spreadsheet
 from turn_sequence import utils
-from turn_sequence.city_points import CityPoints
+from turn_sequence.city_points import Place, PlacePoints
 from turn_sequence.config import load_config, Config, SheetConfig, PathConfig
 
 def get_route_data(origin: Point, destination: Point, api_key: str):
@@ -37,59 +37,6 @@ def get_route_data(origin: Point, destination: Point, api_key: str):
     route_data = response.json()
     utils.check_for_errors(route_data)
     return route_data
-
-
-def get_valid_city_points(city_points: CityPoints, num_points: int, api_key: str) -> list[Point]:
-    """
-    Returns at most num_points from city points
-    Ensures each point is drivable withing the city
-    e.g., not in the water.
-    """
-    valid_points = []
-    num_valid_points = 0
-    for point in city_points.get_shuffled_grid_points():
-        snapped_point = snap_to_road(point, api_key)
-        if snapped_point is None:
-            continue
-        valid_points.append(snapped_point)
-        num_valid_points += 1
-        if len(valid_points) == num_points:
-            return valid_points
-    # If we have iterated through all points and have not found num_points valid points...
-    if not valid_points:
-        raise ValueError(f"Could not find any valid points for {city_points}")
-
-    print((f"Could not find {num_points} points in {city_points}.\n"
-           f"Found {len(valid_points)} valid points out of {len(city_points)}"))
-    return valid_points
-
-def snap_to_road(point: Point, api_key) -> Point:
-    """
-    Returns a (lat, lng) snapped to the nearest road, or None if no road is found.
-    """
-    lon = point.x
-    lat = point.y
-    base_url = "https://roads.googleapis.com/v1/snapToRoads"
-    params = {
-        "path": f"{lat},{lon}",
-        "interpolate": "false",
-        "key": api_key
-    }
-    response = requests.get(base_url, params=params, timeout=15)
-    response.raise_for_status()
-    data = response.json()
-    utils.check_for_errors(data)
-
-    # 'snappedPoints' will be empty if there's no road within ~50m
-    snapped_points = data.get("snappedPoints", [])
-    if not snapped_points:
-        return None  # Means no road found near your point
-
-    # The first snapped point is the nearest road location
-    snapped_location = snapped_points[0]["location"]
-    snapped_lat = snapped_location["latitude"]
-    snapped_lon = snapped_location["longitude"]
-    return Point(snapped_lat, snapped_lon)
 
 def get_double_turns(points: list[Point], api_key) -> float:
     """
@@ -198,11 +145,11 @@ def main():
     #spreadsheet = get_gsheets(config.sheets, config.paths.oatuth_credentials, email=email, publish=True, reset=False)
 
     for city in config.map.cities:
-        city_points = CityPoints(city, config.map.granulariy)
-        points = get_valid_city_points(city_points, config.map.num_points, maps_api_key)
+        place = Place(city)
+        place_points = PlacePoints(place, config.map.granulariy, maps_api_key)
 
-        all_double_turns = get_double_turns(points, maps_api_key)
-        print(all_double_turns)
+        #all_double_turns = get_double_turns(points, maps_api_key)
+        #print(all_double_turns)
 
 if __name__ == "__main__":
     main()
