@@ -155,22 +155,22 @@ def get_gsheets(sheet_config: SheetConfig,
         # Make spreadsheet public with read only access
         spreadsheet.share('', role='reader', type='anyone')
 
-    print("Spreadsheet URL:", spreadsheet.url)
+    print(f"Spreadsheet URL: {spreadsheet.url}")
 
     return spreadsheet
 
 def _init_sheet(spreadsheet: Spreadsheet, sheet_config: SheetConfig) -> None:
-        """Initializes the spreadsheet with the proper worksheet names and headers."""
-        # rename sheet1 & create the rest of the worksheets
-        city_ws = spreadsheet.sheet1
-        city_ws.title = sheet_config.city_worksheet
-        point_ws = spreadsheet.add_worksheet(sheet_config.point_worksheet)
-        directions_ws = spreadsheet.add_worksheet(sheet_config.directions_worksheet)
+    """Initializes the spreadsheet with the proper worksheet names and headers."""
+    # rename sheet1 & create the rest of the worksheets
+    city_ws = spreadsheet.sheet1
+    city_ws.title = sheet_config.city_worksheet
+    point_ws = spreadsheet.add_worksheet(sheet_config.point_worksheet)
+    directions_ws = spreadsheet.add_worksheet(sheet_config.directions_worksheet)
 
-        # Add headers
-        city_ws.insert_rows(row=0, number=1, values=[sheet_config.city_columns])
-        point_ws.insert_rows(row=0, number=1, values=[sheet_config.point_columns])
-        directions_ws.insert_rows(row=0, number=1, values=[sheet_config.directions_columns])
+    # Add headers
+    city_ws.insert_rows(row=0, number=1, values=[sheet_config.city_columns])
+    point_ws.insert_rows(row=0, number=1, values=[sheet_config.point_columns])
+    directions_ws.insert_rows(row=0, number=1, values=[sheet_config.directions_columns])
 
 def add_to_gsheets(spreadsheet: Spreadsheet, sheet_config: SheetConfig, df: pd.DataFrame) -> None:
     """Add data to spreadsheet"""
@@ -195,7 +195,7 @@ def main():
     config_path = Path.cwd() / "config.yaml"
     config = load_config(config_path)
 
-    spreadsheet = get_gsheets(config.sheets, config.paths.oatuth_credentials, email=None, publish=True, reset=True)
+    spreadsheet = get_gsheets(config.sheets, config.paths.oatuth_credentials, email=email, publish=True, reset=False)
     #add_to_gsheets(spreadsheet, config.sheets, df)
 
     return
