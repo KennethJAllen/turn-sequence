@@ -9,7 +9,7 @@ import pygsheets
 from pygsheets.exceptions import SpreadsheetNotFound, WorksheetNotFound
 from pygsheets import Spreadsheet
 from turn_sequence import utils
-from turn_sequence.city_points import Place, PlacePoints
+from turn_sequence.place_points import Place, PlacePoints
 from turn_sequence.config import load_config, Config, SheetConfig, PathConfig
 
 def get_route_data(origin: Point, destination: Point, api_key: str):
