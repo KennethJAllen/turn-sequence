@@ -13,12 +13,17 @@ class CityPoints:
     2) Splits bounding box into granulariy x granularity points
     3) Rejects points that are not within the city
     """
-    def __init__(self, city_name: str, map_granularity: int):
-        self._name: str = city_name
-
+    def __init__(self, city: str, map_granularity: int):
         # Get a GeoDataFrame of the boundary polygon
-        gdf = ox.geocode_to_gdf(self._name)
+        gdf = ox.geocode_to_gdf(city)
+        if not gdf:
+            raise ValueError("Didn't get a city")
+        self._name: str = gdf.display_name
         self.osm_id = gdf['osm_id'][0]
+        self.bbox_west = gdf.bbox_west
+        self.bbox_south = gdf.bbox_south
+        self.bbox_east = gdf.bbox_east
+        self.bbox_north = gdf.bbox_north
         self._polygon: Polygon = gdf['geometry'][0]
         self._grid_points: list[Point] = self._grid_sample_polygon(map_granularity)
 
@@ -27,6 +32,8 @@ class CityPoints:
 
     def __len__(self):
         return len(self._grid_points)
+
+
 
     def get_shuffled_grid_points(self) -> list[Point]:
         """

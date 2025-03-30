@@ -9,7 +9,7 @@ import pygsheets
 from pygsheets.exceptions import SpreadsheetNotFound, WorksheetNotFound
 from pygsheets import Spreadsheet
 from turn_sequence import utils
-from turn_sequence.city_sampler import CityPoints
+from turn_sequence.city_points import CityPoints
 from turn_sequence.config import load_config, Config, SheetConfig, PathConfig
 
 def get_route_data(origin: Point, destination: Point, api_key: str):
@@ -195,10 +195,7 @@ def main():
     config_path = Path.cwd() / "config.yaml"
     config = load_config(config_path)
 
-    spreadsheet = get_gsheets(config.sheets, config.paths.oatuth_credentials, email=email, publish=True, reset=False)
-    #add_to_gsheets(spreadsheet, config.sheets, df)
-
-    return
+    #spreadsheet = get_gsheets(config.sheets, config.paths.oatuth_credentials, email=email, publish=True, reset=False)
 
     for city in config.map.cities:
         city_points = CityPoints(city, config.map.granulariy)
