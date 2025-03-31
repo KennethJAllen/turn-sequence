@@ -9,14 +9,11 @@ class PathConfig:
     oatuth_credentials: Path
 
 @dataclass
-class SheetConfig:
+class PlaceConfig:
     name: str
     city_worksheet: str
     point_worksheet: str
     directions_worksheet: str
-    city_columns: list[str]
-    point_columns: list[str]
-    directions_columns: list[str]
 
 @dataclass
 class MapConfig:
@@ -25,21 +22,63 @@ class MapConfig:
     num_points: int
 
 @dataclass
+class PlaceColumns:
+    id: str
+    name: str
+    display_name: str
+    lat_min: str
+    lon_min: str
+    lat_max: str
+    lon_max: str
+    polygon: str
+
+@dataclass
+class PointColumns:
+    osm_id: str
+    grid_lat: str
+    grid_lon: str
+    snapped_lat: str
+    snapped_lon: str
+
+@dataclass
+class DirectionColumns:
+    osm_id: str
+    origin_id: str
+    desination_id: str
+    raw_directions: str
+    lr_directions: str
+    double_directions: str
+
+@dataclass
 class Config:
-    paths: PathConfig
-    sheets: SheetConfig
-    map: MapConfig
+    path: PathConfig
+    place: PlaceConfig
+    map_: MapConfig
+    place_columns: PlaceColumns
+    point_columns: PointColumns
+    direction_columns: DirectionColumns
 
 def load_config(file_path: Path) -> Config:
     """Loads the configuration from the .yaml file."""
     with file_path.open('r') as f:
         data = yaml.safe_load(f)
 
-    paths = PathConfig(oatuth_credentials=Path(data['paths']['oatuth_credentials']).expanduser())
-    sheets = SheetConfig(**data['sheets'])
+    path_config = PathConfig(oatuth_credentials=Path(data['paths']['oatuth_credentials']).expanduser())
+    place_config = PlaceConfig(**data['sheets'])
     map_config = MapConfig(**data['map'])
+    place_columns = PlaceColumns(**data['place_columns'])
+    point_columns = PointColumns(**data['point_columns'])
+    direction_columns = DirectionColumns(**data['direction_columns'])
 
-    return Config(sheets=sheets, map=map_config, paths=paths)
+    config = Config(
+        place=place_config,
+        map_=map_config,
+        path=path_config,
+        place_columns=place_columns,
+        point_columns=point_columns,
+        direction_columns=direction_columns
+        )
+    return config
 
 if __name__ == '__main__':
     config_path = Path.cwd() / "config.yaml"
