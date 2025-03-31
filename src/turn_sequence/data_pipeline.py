@@ -2,15 +2,14 @@ import os
 from pathlib import Path
 import pandas as pd
 import pygsheets
-from pygsheets.exceptions import SpreadsheetNotFound, WorksheetNotFound
+from pygsheets.exceptions import SpreadsheetNotFound
 from pygsheets import Spreadsheet
-from turn_sequence.config import load_config, PlaceConfig
+from turn_sequence.config import load_config, SheetsConfig, Config
 
-def get_gsheets(sheet_config: PlaceConfig,
-                   credential_path: Path,
-                   email: str=None,
-                   publish: bool=True,
-                   reset: bool=False) -> Spreadsheet:
+def get_gsheets(config: Config,
+                email: str=None,
+                publish: bool=True,
+                reset: bool=False) -> Spreadsheet:
     """
     Creates Google Sheets spreadsheet for storing city, point, and direction data.
     inputs:
@@ -20,11 +19,11 @@ def get_gsheets(sheet_config: PlaceConfig,
         publish (optional): Make the data public to anyone with the url.
         reset (optional): Male reset the spreadsheet
     """
-    gc = pygsheets.authorize(service_file=credential_path)
+    gc = pygsheets.authorize(service_file=config.path.oatuth_credentials)
 
     try:
         # Try to open an existing spreadsheet
-        spreadsheet = gc.open(sheet_config.name)
+        spreadsheet = gc.open(config.sheets.name)
         if reset:
             print("Resetting spreadsheet...")
             gc.drive.delete(spreadsheet.id)
@@ -34,8 +33,8 @@ def get_gsheets(sheet_config: PlaceConfig,
     except SpreadsheetNotFound:
         # Create the spreadsheet if it does not exist
         print("Creating spreadsheet with worksheets...")
-        spreadsheet = gc.create(sheet_config.name)
-        _init_sheet(spreadsheet, sheet_config)
+        spreadsheet = gc.create(config.sheets.name)
+        _init_sheet(spreadsheet, config)
 
     # Optionally share the spreadsheet to access from personal email
     if email is not None:
@@ -49,20 +48,20 @@ def get_gsheets(sheet_config: PlaceConfig,
 
     return spreadsheet
 
-def _init_sheet(spreadsheet: Spreadsheet, sheet_config: PlaceConfig) -> None:
+def _init_sheet(spreadsheet: Spreadsheet, config: Config) -> None:
     """Initializes the spreadsheet with the proper worksheet names and headers."""
     # rename sheet1 & create the rest of the worksheets
     city_ws = spreadsheet.sheet1
-    city_ws.title = sheet_config.city_worksheet
-    point_ws = spreadsheet.add_worksheet(sheet_config.point_worksheet)
-    directions_ws = spreadsheet.add_worksheet(sheet_config.directions_worksheet)
+    city_ws.title = config.sheets.city_worksheet
+    point_ws = spreadsheet.add_worksheet(config.sheets.point_worksheet)
+    directions_ws = spreadsheet.add_worksheet(config.sheets.directions_worksheet)
 
     # Add headers
-    city_ws.insert_rows(row=0, number=1, values=[sheet_config.city_columns])
-    point_ws.insert_rows(row=0, number=1, values=[sheet_config.point_columns])
-    directions_ws.insert_rows(row=0, number=1, values=[sheet_config.directions_columns])
+    city_ws.insert_rows(row=0, number=1, values=[list(config.place_columns)])
+    point_ws.insert_rows(row=0, number=1, values=[list(config.point_columns)])
+    directions_ws.insert_rows(row=0, number=1, values=[list(config.direction_columns)])
 
-def add_to_gsheets(spreadsheet: Spreadsheet, sheet_config: PlaceConfig, df: pd.DataFrame) -> None:
+def add_to_gsheets(spreadsheet: Spreadsheet, sheet_config: SheetsConfig, df: pd.DataFrame) -> None:
     """Add data to spreadsheet"""
     worksheet = spreadsheet.worksheet('title', sheet_config.city_worksheet)
     sheet_header = worksheet.get_row(1, include_tailing_empty=False)
@@ -73,12 +72,13 @@ def add_to_gsheets(spreadsheet: Spreadsheet, sheet_config: PlaceConfig, df: pd.D
     col_data = worksheet.get_col(1, include_tailing_empty=False)
     start_row = len(col_data) + 1
 
+    raise NotImplementedError()
+    # TODO: Finish this
     # Set the DataFrame to the sheet starting at cell A1
     #worksheet.append_table(values, start='A1', end=None, dimension='ROWS', overwrite=False)
 
 def main():
     """Main access point to the script."""
-    #TODO: move to tests
     # load variables from .env
     from dotenv import load_dotenv
     load_dotenv()
@@ -87,7 +87,7 @@ def main():
     config_path = Path.cwd() / "config.yaml"
     config = load_config(config_path)
 
-    #spreadsheet = get_gsheets(config.sheets, config.paths.oatuth_credentials, email=email, publish=True, reset=False)
+    spreadsheet = get_gsheets(config, email=email, publish=True, reset=True)
 
 if __name__ == "__main__":
     main()

@@ -23,15 +23,17 @@ place_columns:
   lat_max: "lat_max"
   lon_max: "lon_max"
   polygon: "polygon"
-point_columns: 
+point_columns:
+  id: "id"
   place_id: "osm_id"
   grid_lat: "grid_lat"
   grid_lon: "grid_lon"
   snapped_lat: "snapped_lat"
   snapped_lon: "snapped_lon"
 direction_columns:
+  id: "id"
   origin_id: "origin_id"
-  desination_id: "destination_id"
+  destination_id: "destination_id"
   raw_directions: "raw_directions"
   lr_directions: left_right_directions"
   double_directions: "double_directions"

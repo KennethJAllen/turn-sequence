@@ -157,7 +157,32 @@ class PlacePoints:
 class Directions:
     """Handles directions between place points."""
     def __init__(self, place_points: PlacePoints, direction_columns: DirectionColumns, api_key: str):
-        pass
+        self.place_points = place_points
+        self.direction_columns = direction_columns
+        self.api_key = api_key
+
+    def get_double_turns(self, points: list[Point], api_key) -> float:
+        """
+        Parameters:
+            - A list of points to calculate pairwise turns
+            - Google Cloud API key
+        Returns
+            - Percentage of turns that alternate between left, right or right, left
+            for choices of two points as origin and destination.
+        """
+        
+        print("Calculating turn sequences...")
+        all_double_turns = []
+        for origin, destination in product(points, points):
+            if origin == destination:
+                continue
+            route_data = self.get_route_data(origin, destination, api_key)
+            maneuvers = utils.get_maneuvers_from_routes(route_data)
+            turns = utils.get_turns_from_maneuvers(maneuvers)
+            double_turns = utils.get_double_turns(turns)
+            all_double_turns += double_turns
+
+        return all_double_turns
 
     def get_route_data(self, origin: Point, destination: Point, api_key: str):
         """
@@ -185,30 +210,6 @@ class Directions:
         utils.check_for_errors(route_data)
         return route_data
 
-    def get_double_turns(self, points: list[Point], api_key) -> float:
-        """
-        Parameters:
-            - A list of points to calculate pairwise turns
-            - Google Cloud API key
-        Returns
-            - Percentage of turns that alternate between left, right or right, left
-            for choices of two points as origin and destination.
-        """
-        
-        print("Calculating turn sequences...")
-        all_double_turns = []
-        for origin, destination in product(points, points):
-            if origin == destination:
-                continue
-            route_data = self.get_route_data(origin, destination, api_key)
-            maneuvers = utils.get_maneuvers_from_routes(route_data)
-            turns = utils.get_turns_from_maneuvers(maneuvers)
-            double_turns = utils.get_double_turns(turns)
-            all_double_turns += double_turns
-
-        return all_double_turns
-
-
 class MapModel:
     """Contains all place, point, and direction data."""
     def __init__(self, name: str, config: Config, api_key: str=None):
@@ -218,7 +219,7 @@ class MapModel:
                                   config.point_columns,
                                   api_key=api_key)
         if api_key is not None:
-            raise NotImplementedError()
+            self.directions = Directions(self.points, config.direction_columns, api_key=api_key)
         else:
             self.directions = None
 
