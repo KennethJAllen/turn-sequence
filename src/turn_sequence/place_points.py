@@ -2,41 +2,48 @@
 Contains CityPoints method which generates polygon
 and evenly partitioned grid points for a city
 """
-from dataclasses import dataclass, field
 import osmnx as ox
 import requests
+import pandas as pd
 from shapely.geometry import Point, Polygon
 from turn_sequence import utils
+from turn_sequence.config import Config, PlaceColumns, PointColumns, DirectionColumns
 
-@dataclass
 class Place:
     """
     Data at the place level, e.g. in a city
     pulled from OpenStreetMap.
     """
-    name: str
-    display_name: str = field(init=False)
-    osm_id: int = field(init=False)
-    bbox_west: float = field(init=False)
-    bbox_south: float = field(init=False)
-    bbox_east: float = field(init=False)
-    bbox_north: float = field(init=False)
-    polygon: Polygon = field(init=False)
+    def __init__(self, name: str, place_columns: PlaceColumns):
+        self.name: str = name
+
+        gdf = ox.geocode_to_gdf(self.name)
+        if gdf.empty:
+            raise ValueError(f"Place data not returned for {self.name}")
+
+        self.display_name: str = gdf.loc[0,'display_name']
+        self.osm_id: int = gdf.loc[0,'osm_id']
+        self.lat_min: float = gdf.loc[0,'bbox_south']
+        self.lon_min: float = gdf.loc[0,'bbox_west']
+        self.lat_max: float = gdf.loc[0,'bbox_north']
+        self.lon_max: float = gdf.loc[0,'bbox_east']
+        self.polygon: Polygon = gdf.loc[0,'geometry']
+        self.df: pd.DataFrame = self._to_df(place_columns)
 
     def __str__(self):
         return self.display_name
 
-    def __post_init__(self):
-        gdf = ox.geocode_to_gdf(self.name)
-        if gdf.empty:
-            raise ValueError(f"Place data not returned for {self.name}")
-        self.display_name = gdf.loc[0,'display_name']
-        self.osm_id = gdf.loc[0,'osm_id']
-        self.bbox_west = gdf.loc[0,'bbox_west']
-        self.bbox_south = gdf.loc[0,'bbox_south']
-        self.bbox_east = gdf.loc[0,'bbox_east']
-        self.bbox_north = gdf.loc[0,'bbox_north']
-        self.polygon = gdf.loc[0,'geometry']
+    def _to_df(self, place_columns: PlaceColumns):
+        data = {
+            place_columns.id: [self.osm_id],
+            place_columns.name: [self.name],
+            place_columns.display_name: [self.display_name],
+            place_columns.lat_min: [self.lat_min],
+            place_columns.lat_max: [self.lat_max],
+            place_columns.lon_min: [self.lon_min],
+            place_columns.lon_max: [self.lon_max]
+        }
+        return pd.DataFrame(data)
 
 class PlacePoints:
     """
@@ -45,7 +52,7 @@ class PlacePoints:
     2) Splits bounding box into granulariy x granularity points
     3) Rejects points that are not within the city
     """
-    def __init__(self, place: Place, map_granularity: int, api_key: str = None):
+    def __init__(self, place: Place, map_granularity: int, point_columns: PointColumns, api_key: str = None):
         # Get a GeoDataFrame of the boundary polygon
         self.place: Place = place
         self.grid_points: list[Point] = self._generate_grid_points(map_granularity)
@@ -53,11 +60,28 @@ class PlacePoints:
             raise ValueError(f"No points found in: {self.place}")
         if api_key is not None:
             self.snapped_points: list[Point] = self._snap_grid_points_to_road(api_key)
+
         else:
             self.snapped_points = None
+        self.df = self._to_df(point_columns)
 
-    def __len__(self):
-        return len(self.grid_points)
+    def _to_df(self, point_columns: PointColumns) -> pd.DataFrame:
+        grid_lat = [grid_point.y for grid_point in self.grid_points]
+        grid_lon = [grid_point.x for grid_point in self.grid_points]
+        if self.snapped_points is not None:
+            snapped_lat = [snapped_point.y if snapped_point is not None else None for snapped_point in self.snapped_points]
+            snapped_lon = [snapped_point.x if snapped_point is not None else None for snapped_point in self.snapped_points]
+        else:
+            snapped_lat = None
+            snapped_lon = None
+        data = {
+            point_columns.place_id: self.place.osm_id,
+            point_columns.grid_lat: grid_lat,
+            point_columns.grid_lon: grid_lon,
+            point_columns.snapped_lat: snapped_lat,
+            point_columns.snapped_lon: snapped_lon
+        }
+        return pd.DataFrame(data)
 
     def _generate_grid_points(self, num: int) -> list[Point]:
         """
@@ -94,8 +118,6 @@ class PlacePoints:
         snapped_points = []
         for point in self.grid_points:
             snapped_point = self._snap_to_road(point, api_key)
-            if snapped_point is None:
-                continue
             snapped_points.append(snapped_point)
         # If we have iterated through all points and have not found num_points valid points...
         if not snapped_points:
@@ -129,15 +151,35 @@ class PlacePoints:
         snapped_location = snapped_points[0]["location"]
         snapped_lat = snapped_location["latitude"]
         snapped_lon = snapped_location["longitude"]
-        return Point(snapped_lat, snapped_lon)
+        return Point(snapped_lon, snapped_lat)
+
+class MapModel:
+    """Contains all place, point, and direction data."""
+    def __init__(self, name: str, config: Config, api_key: str=None):
+        self.place = Place(name, config.place_columns)
+        self.points = PlacePoints(self.place,
+                                  config.map_.granulariy,
+                                  config.point_columns,
+                                  api_key=api_key)
+        # TODO implement directions class
+        self.directions = None
 
 def main():
-    place_name = "Philadelphia, Pennsylvania, USA"
-    granularity = 4
-    place = Place(place_name)
-    place_points = PlacePoints(place, granularity)
-    print(place_points.grid_points)
-    print(place_points.snapped_points)
+    # TODO: move this to tests
+    from pathlib import Path
+    import os
+    from dotenv import load_dotenv
+    from turn_sequence.config import load_config
+    load_dotenv()
+    api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+    config_path = Path.cwd() / "config.yaml"
+    config = load_config(config_path)
+    #name = "Philadelphia, Pennsylvania, USA"
+    name = "Boston, Massachusetts, USA"
+
+    model = MapModel(name, config, api_key=api_key)
+    print(model.place.df)
+    print(model.points.df)
 
 if __name__ == "__main__":
     main()

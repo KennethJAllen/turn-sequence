@@ -2,7 +2,6 @@ import os
 from itertools import product
 from pathlib import Path
 import requests
-from dotenv import load_dotenv
 import pandas as pd
 from shapely.geometry import Point
 import pygsheets
@@ -10,7 +9,7 @@ from pygsheets.exceptions import SpreadsheetNotFound, WorksheetNotFound
 from pygsheets import Spreadsheet
 from turn_sequence import utils
 from turn_sequence.place_points import Place, PlacePoints
-from turn_sequence.config import load_config, Config, SheetConfig, PathConfig
+from turn_sequence.config import load_config, Config, PlaceConfig, PathConfig
 
 def get_route_data(origin: Point, destination: Point, api_key: str):
     """
@@ -63,7 +62,7 @@ def get_double_turns(points: list[Point], api_key) -> float:
 
     return all_double_turns
 
-def get_gsheets(sheet_config: SheetConfig,
+def get_gsheets(sheet_config: PlaceConfig,
                    credential_path: Path,
                    email: str=None,
                    publish: bool=True,
@@ -106,7 +105,7 @@ def get_gsheets(sheet_config: SheetConfig,
 
     return spreadsheet
 
-def _init_sheet(spreadsheet: Spreadsheet, sheet_config: SheetConfig) -> None:
+def _init_sheet(spreadsheet: Spreadsheet, sheet_config: PlaceConfig) -> None:
     """Initializes the spreadsheet with the proper worksheet names and headers."""
     # rename sheet1 & create the rest of the worksheets
     city_ws = spreadsheet.sheet1
@@ -119,7 +118,7 @@ def _init_sheet(spreadsheet: Spreadsheet, sheet_config: SheetConfig) -> None:
     point_ws.insert_rows(row=0, number=1, values=[sheet_config.point_columns])
     directions_ws.insert_rows(row=0, number=1, values=[sheet_config.directions_columns])
 
-def add_to_gsheets(spreadsheet: Spreadsheet, sheet_config: SheetConfig, df: pd.DataFrame) -> None:
+def add_to_gsheets(spreadsheet: Spreadsheet, sheet_config: PlaceConfig, df: pd.DataFrame) -> None:
     """Add data to spreadsheet"""
     worksheet = spreadsheet.worksheet('title', sheet_config.city_worksheet)
     sheet_header = worksheet.get_row(1, include_tailing_empty=False)
@@ -135,7 +134,9 @@ def add_to_gsheets(spreadsheet: Spreadsheet, sheet_config: SheetConfig, df: pd.D
 
 def main():
     """Main access point to the script."""
+    #TODO: move to tests
     # load variables from .env
+    from dotenv import load_dotenv
     load_dotenv()
     maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     email = os.getenv("EMAIL")
@@ -144,9 +145,9 @@ def main():
 
     #spreadsheet = get_gsheets(config.sheets, config.paths.oatuth_credentials, email=email, publish=True, reset=False)
 
-    for city in config.map.cities:
+    for city in config.map_.cities:
         place = Place(city)
-        place_points = PlacePoints(place, config.map.granulariy, maps_api_key)
+        place_points = PlacePoints(place, config.map_.granulariy, maps_api_key)
 
         #all_double_turns = get_double_turns(points, maps_api_key)
         #print(all_double_turns)
