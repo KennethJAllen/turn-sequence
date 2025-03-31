@@ -30,7 +30,6 @@ point_columns:
   snapped_lat: "snapped_lat"
   snapped_lon: "snapped_lon"
 direction_columns:
-  place_id: "osm_id"
   origin_id: "origin_id"
   desination_id: "destination_id"
   raw_directions: "raw_directions"

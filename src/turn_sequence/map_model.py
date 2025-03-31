@@ -2,6 +2,7 @@
 Contains CityPoints method which generates polygon
 and evenly partitioned grid points for a city
 """
+from itertools import product
 import osmnx as ox
 import requests
 import pandas as pd
@@ -153,6 +154,61 @@ class PlacePoints:
         snapped_lon = snapped_location["longitude"]
         return Point(snapped_lon, snapped_lat)
 
+class Directions:
+    """Handles directions between place points."""
+    def __init__(self, place_points: PlacePoints, direction_columns: DirectionColumns, api_key: str):
+        pass
+
+    def get_route_data(self, origin: Point, destination: Point, api_key: str):
+        """
+        Given an origin and desitination as Point objects,
+        return the route data from Google Routes API.
+        Point.x is lattitude, Point.y is longitude.
+        """
+        url = "https://routes.googleapis.com/directions/v2:computeRoutes"
+        if origin == destination:
+            raise ValueError("Origin and destination must be different.")
+        
+        headers = {
+            "Content-Type": "application/json; charset=UTF-8",
+            "X-Goog-Api-Key": api_key,
+            "X-Goog-FieldMask": (
+                "routes.legs.steps.navigationInstruction.maneuver"
+            )
+        }
+
+        body = utils.format_route_body(origin, destination)
+
+        response = requests.post(url, headers=headers, json=body, timeout=15)
+        response.raise_for_status()
+        route_data = response.json()
+        utils.check_for_errors(route_data)
+        return route_data
+
+    def get_double_turns(self, points: list[Point], api_key) -> float:
+        """
+        Parameters:
+            - A list of points to calculate pairwise turns
+            - Google Cloud API key
+        Returns
+            - Percentage of turns that alternate between left, right or right, left
+            for choices of two points as origin and destination.
+        """
+        
+        print("Calculating turn sequences...")
+        all_double_turns = []
+        for origin, destination in product(points, points):
+            if origin == destination:
+                continue
+            route_data = self.get_route_data(origin, destination, api_key)
+            maneuvers = utils.get_maneuvers_from_routes(route_data)
+            turns = utils.get_turns_from_maneuvers(maneuvers)
+            double_turns = utils.get_double_turns(turns)
+            all_double_turns += double_turns
+
+        return all_double_turns
+
+
 class MapModel:
     """Contains all place, point, and direction data."""
     def __init__(self, name: str, config: Config, api_key: str=None):
@@ -161,11 +217,12 @@ class MapModel:
                                   config.map_.granulariy,
                                   config.point_columns,
                                   api_key=api_key)
-        # TODO implement directions class
-        self.directions = None
+        if api_key is not None:
+            raise NotImplementedError()
+        else:
+            self.directions = None
 
 def main():
-    # TODO: move this to tests
     from pathlib import Path
     import os
     from dotenv import load_dotenv

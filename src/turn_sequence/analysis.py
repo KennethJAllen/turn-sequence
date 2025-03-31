@@ -18,7 +18,7 @@ def alternating_metric(double_turns: list[str]) -> float:
 
 def plot_place_points(model: MapModel, point_columns: PointColumns, plot_path: Path) -> None:
     """Plots points on map."""
-    fig = plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(8, 6))
     ax = plt.axes(projection=ccrs.PlateCarree())
 
     # map features
@@ -50,8 +50,6 @@ def plot_place_points(model: MapModel, point_columns: PointColumns, plot_path: P
     plt.close()
 
 def main():
-    # TODO: move this to tests
-    from pathlib import Path
     import os
     from dotenv import load_dotenv
     from turn_sequence.config import load_config

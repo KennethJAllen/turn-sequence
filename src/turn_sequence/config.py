@@ -41,7 +41,6 @@ class PointColumns:
 
 @dataclass
 class DirectionColumns:
-    place_id: str
     origin_id: str
     desination_id: str
     raw_directions: str
