@@ -3,12 +3,12 @@ paths:
 
 sheets:
   name: "TurnSequence"
-  city_worksheet: "Cities"
+  place_worksheet: "Places"
   point_worksheet: "Points"
   directions_worksheet: "Directions"
 
 map:
-  cities: [
+  places: [
     "Philadelphia, Pennsylvania, USA",
     "Boston, Massachusetts, USA"
     ]

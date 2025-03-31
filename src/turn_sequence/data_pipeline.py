@@ -11,7 +11,7 @@ def get_gsheets(config: Config,
                 publish: bool=True,
                 reset: bool=False) -> Spreadsheet:
     """
-    Creates Google Sheets spreadsheet for storing city, point, and direction data.
+    Creates Google Sheets spreadsheet for storing place, point, and direction data.
     inputs:
         sheets: An instance of the Sheets parameter class that contains the names of the sheet and worksheet.
         credential_path: The path to the credentials.
@@ -25,10 +25,16 @@ def get_gsheets(config: Config,
         # Try to open an existing spreadsheet
         spreadsheet = gc.open(config.sheets.name)
         if reset:
-            print("Resetting spreadsheet...")
-            gc.drive.delete(spreadsheet.id)
-            raise SpreadsheetNotFound
-        print("Opening spreadsheet...")
+            print("Resetting spreadsheet worksheets...")
+            # Iterate over a copy of the worksheet list to delete them safely.
+            for ws in spreadsheet.worksheets():
+                spreadsheet.del_worksheet(ws)
+            # Google Sheets requires at least one worksheet in the spreadsheet so clear the last one
+            remaining_ws = spreadsheet.worksheets()[0]
+            remaining_ws.clear()
+            _init_sheet(spreadsheet, config)
+        else:
+            print("Opening spreadsheet...")
 
     except SpreadsheetNotFound:
         # Create the spreadsheet if it does not exist
@@ -50,20 +56,24 @@ def get_gsheets(config: Config,
 
 def _init_sheet(spreadsheet: Spreadsheet, config: Config) -> None:
     """Initializes the spreadsheet with the proper worksheet names and headers."""
-    # rename sheet1 & create the rest of the worksheets
-    city_ws = spreadsheet.sheet1
-    city_ws.title = config.sheets.city_worksheet
+    if spreadsheet.worksheets():
+        # Case when the spreradsheet is created form scratch
+        place_ws = spreadsheet.worksheets()[0]
+        place_ws.title = config.sheets.place_worksheet
+    else:
+        # Case when the spreadsheet is reset
+        place_ws = spreadsheet.add_worksheet(config.sheets.place_worksheet)
     point_ws = spreadsheet.add_worksheet(config.sheets.point_worksheet)
     directions_ws = spreadsheet.add_worksheet(config.sheets.directions_worksheet)
 
     # Add headers
-    city_ws.insert_rows(row=0, number=1, values=[list(config.place_columns)])
+    place_ws.insert_rows(row=0, number=1, values=[list(config.place_columns)])
     point_ws.insert_rows(row=0, number=1, values=[list(config.point_columns)])
     directions_ws.insert_rows(row=0, number=1, values=[list(config.direction_columns)])
 
 def add_to_gsheets(spreadsheet: Spreadsheet, sheet_config: SheetsConfig, df: pd.DataFrame) -> None:
     """Add data to spreadsheet"""
-    worksheet = spreadsheet.worksheet('title', sheet_config.city_worksheet)
+    worksheet = spreadsheet.worksheet('title', sheet_config.place_worksheet)
     sheet_header = worksheet.get_row(1, include_tailing_empty=False)
 
     # Reorder the DataFrame columns to match the sheet header

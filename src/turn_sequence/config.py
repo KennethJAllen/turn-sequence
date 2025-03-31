@@ -10,13 +10,13 @@ class PathConfig:
 @dataclass
 class SheetsConfig:
     name: str
-    city_worksheet: str
+    place_worksheet: str
     point_worksheet: str
     directions_worksheet: str
 
 @dataclass
 class MapConfig:
-    cities: list[str]
+    places: list[str]
     granulariy: int
 
 @dataclass

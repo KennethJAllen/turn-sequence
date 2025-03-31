@@ -1,6 +1,5 @@
 """
-Contains CityPoints method which generates polygon
-and evenly partitioned grid points for a city
+Contains model for map data.
 """
 from itertools import product
 import osmnx as ox
@@ -49,9 +48,9 @@ class Place:
 class PlacePoints:
     """
     Generates points within a given Place.
-    1) Paritions a city into grid points
+    1) Paritions a place into grid points
     2) Splits bounding box into granulariy x granularity points
-    3) Rejects points that are not within the city
+    3) Rejects points that are not within the place
     """
     def __init__(self, place: Place, map_granularity: int, point_columns: PointColumns, api_key: str = None):
         # Get a GeoDataFrame of the boundary polygon
@@ -86,12 +85,12 @@ class PlacePoints:
 
     def _generate_grid_points(self, num: int) -> list[Point]:
         """
-        Partitions the city into grid points, evenly spaced along lat and lon.
+        Partitions the place into grid points, evenly spaced along lat and lon.
         Iterates over points in bounding box.
         If they are not in the polygon bounding the Place, they are tossed.
         Returns a list of points spaced dx, dy apart inside the polygon.
         """
-        print("Partioning city into evenly spaced points...")
+        print("Partioning place into evenly spaced points...")
         minx, miny, maxx, maxy = self.place.polygon.bounds
         dx = (maxx - minx)/num
         dy = (maxy - miny)/num
@@ -112,9 +111,8 @@ class PlacePoints:
 
     def _snap_grid_points_to_road(self, api_key: str) -> list[Point]:
         """
-        Returns at most num_points from city points
-        Ensures each point is drivable withing the city
-        e.g., not in the water.
+        Snaps all points to the road.
+        Ensures each point is drivable, e.g., not in the water.
         """
         snapped_points = []
         for point in self.grid_points:
@@ -160,15 +158,15 @@ class Directions:
         self.place_points = place_points
         self.direction_columns = direction_columns
         self.api_key = api_key
+        # TODO: Finish this
 
-    def get_double_turns(self, points: list[Point], api_key) -> float:
+    def get_double_turns(self, points: list[Point], api_key) -> list[str]:
         """
         Parameters:
             - A list of points to calculate pairwise turns
             - Google Cloud API key
         Returns
-            - Percentage of turns that alternate between left, right or right, left
-            for choices of two points as origin and destination.
+            - List of double turn directions.
         """
         
         print("Calculating turn sequences...")
@@ -188,7 +186,6 @@ class Directions:
         """
         Given an origin and desitination as Point objects,
         return the route data from Google Routes API.
-        Point.x is lattitude, Point.y is longitude.
         """
         url = "https://routes.googleapis.com/directions/v2:computeRoutes"
         if origin == destination:

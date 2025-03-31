@@ -1,7 +1,20 @@
 # Turn Sequence
-When there are multiple lanes to take a turn, while lane should you choose?
+
+## Summary
 
 Uses Google Geocode API and Routes API to analyze the frequency of left-right and right-left turns vs. left-left and right-right turns.
+
+# Hypothesis
+
+While driving, if there are multiple lanes to take a turn, while lane should you choose?
+
+The hypothesis is choosing the right-most lane when taking a left turn, or the left-most lane when taking a right turn is most otimal.
+
+This is because when traveling, each turn is an overcorrection towards your destination.
+
+For a simple model, if we are traveling on a grid, then any optimal path will alternate between left and right turns.
+
+In practice, we still make multiple of the same direction turns in a row. But how often? This project aims to answer that question.
 
 ## Installation
 
