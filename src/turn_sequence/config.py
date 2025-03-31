@@ -19,7 +19,6 @@ class PlaceConfig:
 class MapConfig:
     cities: list[str]
     granulariy: int
-    num_points: int
 
 @dataclass
 class PlaceColumns:
@@ -34,7 +33,7 @@ class PlaceColumns:
 
 @dataclass
 class PointColumns:
-    osm_id: str
+    place_id: str
     grid_lat: str
     grid_lon: str
     snapped_lat: str
@@ -42,7 +41,7 @@ class PointColumns:
 
 @dataclass
 class DirectionColumns:
-    osm_id: str
+    place_id: str
     origin_id: str
     desination_id: str
     raw_directions: str

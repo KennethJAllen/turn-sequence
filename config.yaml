@@ -12,8 +12,7 @@ map:
     "Philadelphia, Pennsylvania, USA",
     "Boston, Massachusetts, USA"
     ]
-  granulariy: 10
-  num_points: 3
+  granulariy: 4
 
 place_columns:
   id: "osm_id"
@@ -25,13 +24,13 @@ place_columns:
   lon_max: "lon_max"
   polygon: "polygon"
 point_columns: 
-  osm_id: "osm_id"
+  place_id: "osm_id"
   grid_lat: "grid_lat"
   grid_lon: "grid_lon"
   snapped_lat: "snapped_lat"
   snapped_lon: "snapped_lon"
 direction_columns:
-  osm_id: "osm_id"
+  place_id: "osm_id"
   origin_id: "origin_id"
   desination_id: "destination_id"
   raw_directions: "raw_directions"
