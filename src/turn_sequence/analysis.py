@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from turn_sequence.place_points import MapModel
+from turn_sequence.map_model import MapModel
 from turn_sequence.config import PointColumns
 
 def alternating_metric(double_turns: list[str]) -> float:
