@@ -1,7 +1,7 @@
 """
 Contains model for map data.
 """
-from itertools import product
+import random
 import osmnx as ox
 import requests
 import pandas as pd
@@ -153,44 +153,37 @@ class PlacePoints:
         return Point(snapped_lon, snapped_lat)
 
 class Directions:
-    """Handles directions between place points."""
-    def __init__(self, place_points: PlacePoints, direction_columns: DirectionColumns, api_key: str):
-        self.place_points = place_points
-        self.direction_columns = direction_columns
-        self.api_key = api_key
-        # TODO: Finish this
+    """
+    Handles directions between place points.
+    If choose_n_random is provided, chooses n random points to compute pairwise directions
+    instead of computing pairwise directions for all snapped points.
+    Otherwise, computes all pairwise directions for all snapped points.
 
-    def get_double_turns(self, points: list[Point], api_key) -> list[str]:
-        """
-        Parameters:
-            - A list of points to calculate pairwise turns
-            - Google Cloud API key
-        Returns
-            - List of double turn directions.
-        """
-        
-        print("Calculating turn sequences...")
-        all_double_turns = []
-        for origin, destination in product(points, points):
-            if origin == destination:
-                continue
-            route_data = self.get_route_data(origin, destination, api_key)
-            maneuvers = utils.get_maneuvers_from_routes(route_data)
-            turns = utils.get_turns_from_maneuvers(maneuvers)
-            double_turns = utils.get_double_turns(turns)
-            all_double_turns += double_turns
+    WARNING: if there are n snapped points in points,
+    makes O(n^2) API calls to find all pairwise directions.
+    """
+    def __init__(self, points: PlacePoints,
+                 direction_columns: DirectionColumns,
+                 api_key: str,
+                 choose_random: int = None):
+        self.points = points
+        snapped_points = [snapped_point for snapped_point in self.points.snapped_points if snapped_point is not None]
+        if choose_random is not None:
+            random.shuffle(snapped_points)
+            points = snapped_points[:choose_random]
+        else:
+            points = snapped_points
+        self.df = self._to_df(points, direction_columns, api_key)
 
-        return all_double_turns
-
-    def get_route_data(self, origin: Point, destination: Point, api_key: str):
+    def _get_route_data(self, origin: Point, destination: Point, api_key: str):
         """
         Given an origin and desitination as Point objects,
         return the route data from Google Routes API.
         """
-        url = "https://routes.googleapis.com/directions/v2:computeRoutes"
         if origin == destination:
             raise ValueError("Origin and destination must be different.")
-        
+
+        url = "https://routes.googleapis.com/directions/v2:computeRoutes"
         headers = {
             "Content-Type": "application/json; charset=UTF-8",
             "X-Goog-Api-Key": api_key,
@@ -206,6 +199,45 @@ class Directions:
         route_data = response.json()
         utils.check_for_errors(route_data)
         return route_data
+
+    def _to_df(self, points: list[Point], direction_columns: DirectionColumns, api_key: str) -> pd.DataFrame:
+        """
+        Finds and processes pairwise directions for all pairwise points in points.
+        Uses Google Routes API to find directions.
+        returns data formatted as dataframe.
+        WARNING: if there are n points in points, this functions makes O(n^2) API calls to find all pairwise directions.
+        """
+        origin_id_col = []
+        destination_id_col = []
+        raw_directions_col = []
+        lr_directions_col = []
+        double_directions_col = []
+
+        for origin_id, origin in enumerate(points):
+            for destination_id, destination in enumerate(points):
+                if origin == destination:
+                    continue
+                route_data = self._get_route_data(origin, destination, api_key)
+                if not route_data:
+                    continue
+                raw_directions = utils.get_maneuvers_from_routes(route_data)
+                lr_directions = utils.get_turns_from_maneuvers(raw_directions)
+                double_directions = utils.get_double_turns(lr_directions)
+
+                origin_id_col.append(origin_id)
+                destination_id_col.append(destination_id)
+                raw_directions_col.append(raw_directions)
+                lr_directions_col.append(lr_directions)
+                double_directions_col.append(double_directions)
+
+        data = {
+            direction_columns.origin_id: origin_id_col,
+            direction_columns.destination_id: destination_id_col,
+            direction_columns.raw_directions: raw_directions_col,
+            direction_columns.lr_directions: lr_directions_col,
+            direction_columns.double_directions: double_directions_col
+        }
+        return pd.DataFrame(data)
 
 class MapModel:
     """Contains all place, point, and direction data."""
@@ -229,12 +261,13 @@ def main():
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     config_path = Path.cwd() / "config.yaml"
     config = load_config(config_path)
-    #name = "Philadelphia, Pennsylvania, USA"
-    name = "Boston, Massachusetts, USA"
+    name = "Philadelphia, Pennsylvania, USA"
+    #name = "Boston, Massachusetts, USA"
 
     model = MapModel(name, config, api_key=api_key)
     print(model.place.df)
     print(model.points.df)
+    print(model.directions.df)
 
 if __name__ == "__main__":
     main()

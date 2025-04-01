@@ -10,16 +10,16 @@ def format_route_body(origin: Point, destination: Point) -> dict:
         "origin": {
             "location": {
                 "latLng": {
-                    "latitude": origin.x,
-                    "longitude": origin.y
+                    "latitude": origin.y,
+                    "longitude": origin.x
                 }
             }
         },
         "destination": {
             "location": {
                 "latLng": {
-                    "latitude": destination.x,
-                    "longitude": destination.y
+                    "latitude": destination.y,
+                    "longitude": destination.x
                 }
             }
         },
