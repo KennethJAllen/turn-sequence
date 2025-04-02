@@ -91,12 +91,21 @@ class ProjectConfig:
 
 @dataclass
 class GoogleIds:
+    """Contains the gid for each worksheet for a specific Google sheet."""
     places: int
     points: int
     directions: int
 
+    def __iter__(self):
+        yield from (
+            self.places,
+            self.points,
+            self.directions
+        )
+
 @dataclass
 class GoogleSheetConfig:
+    """Contains the sheet id and gids for a speecific Google sheet."""
     id: str
     gid: GoogleIds
 

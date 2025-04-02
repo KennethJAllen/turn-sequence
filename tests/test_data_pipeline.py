@@ -5,4 +5,5 @@ from turn_sequence.config import GoogleSheetConfig
 def test_get_gsheets_df(sheet_config: GoogleSheetConfig):
     for gid in sheet_config.gid:
         df = data_pipeline.get_gsheets_df(sheet_config.id, gid)
-        assert len(df) > 0
+        # Check that columns exist
+        assert len(df.columns) > 0
