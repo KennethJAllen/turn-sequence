@@ -5,9 +5,9 @@ import pygsheets
 from pygsheets.exceptions import SpreadsheetNotFound
 from pygsheets import Spreadsheet
 from turn_sequence.map_model import MapModel
-from turn_sequence.config import load_config, SheetsConfig, Config
+from turn_sequence.config import load_project_config, SheetNamesConfig, ProjectConfig
 
-def get_gsheets(config: Config,
+def get_gsheets(config: ProjectConfig,
                 email: str=None,
                 publish: bool=True,
                 reset: bool=False) -> Spreadsheet:
@@ -55,7 +55,7 @@ def get_gsheets(config: Config,
 
     return spreadsheet
 
-def _init_sheet(spreadsheet: Spreadsheet, config: Config) -> None:
+def _init_sheet(spreadsheet: Spreadsheet, config: ProjectConfig) -> None:
     """Initializes the spreadsheet with the proper worksheet names and headers."""
     if spreadsheet.worksheets():
         # Case when the spreradsheet is created form scratch
@@ -72,13 +72,22 @@ def _init_sheet(spreadsheet: Spreadsheet, config: Config) -> None:
     point_ws.insert_rows(row=0, number=1, values=[list(config.point_columns)])
     directions_ws.insert_rows(row=0, number=1, values=[list(config.direction_columns)])
 
-def add_to_gsheets(map_model: MapModel, spreadsheet: Spreadsheet, sheet_config: SheetsConfig) -> None:
+def get_gsheets_df(sheet_id: str, gid: int) -> pd.DataFrame:
+    """
+    Reads worksheet correspongin to gid
+    from google sheets and returns it as a dataframe.
+    """
+    url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&id={sheet_id}&gid={gid}'
+    df = pd.read_csv(url)
+    return df
+
+def add_to_gsheets(map_model: MapModel, spreadsheet: Spreadsheet, sheet_names: SheetNamesConfig) -> None:
     """Data in map model to Google Sheets."""
-    worksheet = spreadsheet.worksheet('title', sheet_config.place_worksheet)
+    worksheet = spreadsheet.worksheet('title', sheet_names.place_worksheet)
     sheet_header = worksheet.get_row(1, include_tailing_empty=False)
 
     # Reorder the DataFrame columns to match the sheet header
-    df = df[sheet_header]
+    #df = df[sheet_header]
 
     col_data = worksheet.get_col(1, include_tailing_empty=False)
     start_row = len(col_data) + 1
@@ -95,8 +104,8 @@ def main():
     load_dotenv()
     maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     email = os.getenv("EMAIL")
-    config_path = Path.cwd() / "config.yaml"
-    config = load_config(config_path)
+    config_path = Path.cwd() / "config" / "project_config.yaml"
+    config = load_project_config(config_path)
 
     spreadsheet = get_gsheets(config, email=email, publish=True, reset=True)
 

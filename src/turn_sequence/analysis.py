@@ -52,11 +52,11 @@ def plot_place_points(model: MapModel, point_columns: PointColumns, plot_path: P
 def main():
     import os
     from dotenv import load_dotenv
-    from turn_sequence.config import load_config
+    from turn_sequence.config import load_project_config
     load_dotenv()
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-    config_path = Path.cwd() / "config.yaml"
-    config = load_config(config_path)
+    config_path = Path.cwd() / "config" / "project_config.yaml"
+    config = load_project_config(config_path)
     #name = "Philadelphia, Pennsylvania, USA"
     name = "Boston, Massachusetts, USA"
     model = MapModel(name, config, api_key=api_key)

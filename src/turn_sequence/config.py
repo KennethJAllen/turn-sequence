@@ -1,4 +1,4 @@
-"""Handles the config settings from config.yml."""
+"""Handles the parameters and models from config files."""
 from dataclasses import dataclass
 from pathlib import Path
 import yaml
@@ -8,7 +8,7 @@ class PathConfig:
     oatuth_credentials: Path
 
 @dataclass
-class SheetsConfig:
+class SheetNamesConfig:
     name: str
     place_worksheet: str
     point_worksheet: str
@@ -81,27 +81,38 @@ class DirectionColumns:
         )
 
 @dataclass
-class Config:
+class ProjectConfig:
     path: PathConfig
-    sheets: SheetsConfig
+    sheets: SheetNamesConfig
     map_: MapConfig
     place_columns: PlaceColumns
     point_columns: PointColumns
     direction_columns: DirectionColumns
 
-def load_config(file_path: Path) -> Config:
-    """Loads the configuration from the .yaml file."""
+@dataclass
+class GoogleIds:
+    places: int
+    points: int
+    directions: int
+
+@dataclass
+class GoogleSheetConfig:
+    id: str
+    gid: GoogleIds
+
+def load_project_config(file_path: Path) -> ProjectConfig:
+    """Loads the project configuration from the .yaml file."""
     with file_path.open('r') as f:
         data = yaml.safe_load(f)
 
     path_config = PathConfig(oatuth_credentials=Path(data['paths']['oatuth_credentials']).expanduser())
-    sheets_config = SheetsConfig(**data['sheets'])
+    sheets_config = SheetNamesConfig(**data['sheets'])
     map_config = MapConfig(**data['map'])
     place_columns = PlaceColumns(**data['place_columns'])
     point_columns = PointColumns(**data['point_columns'])
     direction_columns = DirectionColumns(**data['direction_columns'])
 
-    config = Config(
+    config = ProjectConfig(
         sheets=sheets_config,
         map_=map_config,
         path=path_config,
@@ -111,10 +122,23 @@ def load_config(file_path: Path) -> Config:
         )
     return config
 
+def load_sheet_config(file_path: Path) -> GoogleSheetConfig:
+    """Loads the Google sheets configuration .yaml file"""
+    with file_path.open('r') as f:
+        data = yaml.safe_load(f)
+    gid = GoogleIds(**data['gid'])
+    config = GoogleSheetConfig(id=data['id'], gid=gid)
+    return config
+
 def main():
-    config_path = Path.cwd() / "config.yaml"
-    config = load_config(config_path)
-    print(config)
+    config_dir = Path.cwd() / "config"
+    project_config_path = config_dir / "project_config.yaml"
+    project_config = load_project_config(project_config_path)
+    print(project_config)
+
+    sheet_config_path = config_dir / "sheet_config.yaml"
+    sheet_config = load_sheet_config(sheet_config_path)
+    print(sheet_config)
 
 if __name__ == '__main__':
     main()

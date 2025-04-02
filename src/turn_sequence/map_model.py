@@ -7,7 +7,7 @@ import requests
 import pandas as pd
 from shapely.geometry import Point, Polygon
 from turn_sequence import utils
-from turn_sequence.config import Config, PlaceColumns, PointColumns, DirectionColumns
+from turn_sequence.config import ProjectConfig, PlaceColumns, PointColumns, DirectionColumns
 
 class Place:
     """
@@ -42,7 +42,7 @@ class Place:
             place_columns.lat_max: [self.lat_max],
             place_columns.lon_min: [self.lon_min],
             place_columns.lon_max: [self.lon_max]
-        }
+            }
         return pd.DataFrame(data)
 
 class PlacePoints:
@@ -241,7 +241,7 @@ class Directions:
 
 class MapModel:
     """Contains all place, point, and direction data."""
-    def __init__(self, name: str, config: Config, api_key: str=None):
+    def __init__(self, name: str, config: ProjectConfig, api_key: str=None):
         self.place = Place(name, config.place_columns)
         self.points = PlacePoints(self.place,
                                   config.map_.granulariy,
@@ -256,11 +256,11 @@ def main():
     from pathlib import Path
     import os
     from dotenv import load_dotenv
-    from turn_sequence.config import load_config
+    from turn_sequence.config import load_project_config
     load_dotenv()
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-    config_path = Path.cwd() / "config.yaml"
-    config = load_config(config_path)
+    config_path = Path.cwd() / "config" / "project_config.yaml"
+    config = load_project_config(config_path)
     name = "Philadelphia, Pennsylvania, USA"
     #name = "Boston, Massachusetts, USA"
 

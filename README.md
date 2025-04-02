@@ -33,4 +33,4 @@ To recreate the database, you need a [Google Cloud](https://console.cloud.google
 ### OAuth Credentials
 OAuth credentials are required to write to Google Sheets.
 3) Create a service account and generate a JSON key file.
-4) Download the JSON file with your OAuth credentials, and save to `~/.credentials/sheets_oauth.json`, or specified the path in `config.yaml`.
+4) Download the JSON file with your OAuth credentials, and save to `~/.credentials/sheets_oauth.json`, or specified the path in `project_config.yaml`.
