@@ -1,10 +1,20 @@
 """Turn sequence analysis module."""
 from pathlib import Path
+import pandas as pd
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from turn_sequence.map_model import MapModel
 from turn_sequence.config import PointColumns
+
+def get_gsheet_df(sheet_id: str, gid: int) -> pd.DataFrame:
+    """
+    Reads worksheet correspongin to gid
+    from google sheets and returns it as a dataframe.
+    """
+    url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&id={sheet_id}&gid={gid}'
+    df = pd.read_csv(url)
+    return df
 
 def alternating_metric(double_turns: list[str]) -> float:
     """Returns fraction of turns that alternate either LEFT -> RIGHT or RIGHT -> LEFT."""

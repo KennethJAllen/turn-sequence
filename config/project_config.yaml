@@ -1,7 +1,7 @@
 paths:
   oatuth_credentials: "~/.credentials/sheets_oauth.json"
 
-sheets:
+sheet:
   name: "TurnSequence"
   place_worksheet: "Places"
   point_worksheet: "Points"
@@ -22,7 +22,6 @@ place_columns:
   lon_min: "lon_min"
   lat_max: "lat_max"
   lon_max: "lon_max"
-  polygon: "polygon"
 point_columns:
   id: "id"
   place_id: "osm_id"
@@ -32,6 +31,7 @@ point_columns:
   snapped_lon: "snapped_lon"
 direction_columns:
   id: "id"
+  place_id: "osm_id"
   origin_id: "origin_id"
   destination_id: "destination_id"
   raw_directions: "raw_directions"

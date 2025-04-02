@@ -22,7 +22,7 @@ class Place:
             raise ValueError(f"Place data not returned for {self.name}")
 
         self.display_name: str = gdf.loc[0,'display_name']
-        self.osm_id: int = gdf.loc[0,'osm_id']
+        self.id: int = gdf.loc[0,'osm_id']
         self.lat_min: float = gdf.loc[0,'bbox_south']
         self.lon_min: float = gdf.loc[0,'bbox_west']
         self.lat_max: float = gdf.loc[0,'bbox_north']
@@ -35,7 +35,7 @@ class Place:
 
     def _to_df(self, place_columns: PlaceColumns):
         data = {
-            place_columns.id: [self.osm_id],
+            place_columns.id: [self.id],
             place_columns.name: [self.name],
             place_columns.display_name: [self.display_name],
             place_columns.lat_min: [self.lat_min],
@@ -66,6 +66,8 @@ class PlacePoints:
         self.df = self._to_df(point_columns)
 
     def _to_df(self, point_columns: PointColumns) -> pd.DataFrame:
+        """Converts data to dataframe."""
+        ids = tuple(range(len(self.grid_points)))
         grid_lat = [grid_point.y for grid_point in self.grid_points]
         grid_lon = [grid_point.x for grid_point in self.grid_points]
         if self.snapped_points is not None:
@@ -75,7 +77,8 @@ class PlacePoints:
             snapped_lat = None
             snapped_lon = None
         data = {
-            point_columns.place_id: self.place.osm_id,
+            point_columns.id: ids,
+            point_columns.place_id: self.place.id,
             point_columns.grid_lat: grid_lat,
             point_columns.grid_lon: grid_lon,
             point_columns.snapped_lat: snapped_lat,
@@ -230,9 +233,12 @@ class Directions:
                 lr_directions_col.append(lr_directions)
                 double_directions_col.append(double_directions)
 
+        ids = tuple(range(len(raw_directions_col)))
         data = {
+            direction_columns.id: ids,
             direction_columns.origin_id: origin_id_col,
             direction_columns.destination_id: destination_id_col,
+            direction_columns.place_id: self.points.place.id,
             direction_columns.raw_directions: raw_directions_col,
             direction_columns.lr_directions: lr_directions_col,
             direction_columns.double_directions: double_directions_col

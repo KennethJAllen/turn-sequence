@@ -28,7 +28,6 @@ class PlaceColumns:
     lat_max: str
     lon_min: str
     lon_max: str
-    polygon: str
 
     def __iter__(self):
         yield from (
@@ -39,7 +38,6 @@ class PlaceColumns:
             self.lat_max,
             self.lon_min,
             self.lon_max,
-            self.polygon
         )
 
 @dataclass
@@ -66,6 +64,7 @@ class DirectionColumns:
     id: str
     origin_id: str
     destination_id: str
+    place_id: str
     raw_directions: str
     lr_directions: str
     double_directions: str
@@ -75,6 +74,7 @@ class DirectionColumns:
             self.id,
             self.origin_id,
             self.destination_id,
+            self.place_id,
             self.raw_directions,
             self.lr_directions,
             self.double_directions
@@ -83,7 +83,7 @@ class DirectionColumns:
 @dataclass
 class ProjectConfig:
     path: PathConfig
-    sheets: SheetNamesConfig
+    sheet: SheetNamesConfig
     map_: MapConfig
     place_columns: PlaceColumns
     point_columns: PointColumns
@@ -115,14 +115,14 @@ def load_project_config(file_path: Path) -> ProjectConfig:
         data = yaml.safe_load(f)
 
     path_config = PathConfig(oatuth_credentials=Path(data['paths']['oatuth_credentials']).expanduser())
-    sheets_config = SheetNamesConfig(**data['sheets'])
+    sheet_config = SheetNamesConfig(**data['sheet'])
     map_config = MapConfig(**data['map'])
     place_columns = PlaceColumns(**data['place_columns'])
     point_columns = PointColumns(**data['point_columns'])
     direction_columns = DirectionColumns(**data['direction_columns'])
 
     config = ProjectConfig(
-        sheets=sheets_config,
+        sheet=sheet_config,
         map_=map_config,
         path=path_config,
         place_columns=place_columns,
