@@ -4,6 +4,7 @@ import pandas as pd
 import pygsheets
 from pygsheets.exceptions import SpreadsheetNotFound
 from pygsheets import Spreadsheet
+from turn_sequence.map_model import MapModel
 from turn_sequence.config import load_config, SheetsConfig, Config
 
 def get_gsheets(config: Config,
@@ -71,8 +72,8 @@ def _init_sheet(spreadsheet: Spreadsheet, config: Config) -> None:
     point_ws.insert_rows(row=0, number=1, values=[list(config.point_columns)])
     directions_ws.insert_rows(row=0, number=1, values=[list(config.direction_columns)])
 
-def add_to_gsheets(spreadsheet: Spreadsheet, sheet_config: SheetsConfig, df: pd.DataFrame) -> None:
-    """Add data to spreadsheet"""
+def add_to_gsheets(map_model: MapModel, spreadsheet: Spreadsheet, sheet_config: SheetsConfig) -> None:
+    """Data in map model to Google Sheets."""
     worksheet = spreadsheet.worksheet('title', sheet_config.place_worksheet)
     sheet_header = worksheet.get_row(1, include_tailing_empty=False)
 
