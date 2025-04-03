@@ -1,5 +1,6 @@
 """Utility functions"""
 from shapely.geometry import Point
+from pygsheets import Worksheet
 
 def format_route_body(origin: Point, destination: Point) -> dict:
     """
@@ -70,3 +71,23 @@ def get_double_turns(turns: list[str]) -> list[str]:
         t_next = turns[index+1]
         double_turns.append(turn + t_next)
     return double_turns
+
+def get_column_index(worksheet: Worksheet, column_name: str) -> int:
+    """
+    Retrieve the column index for a given header in a pygsheets worksheet.
+
+    Args:
+        worksheet: The pygsheets worksheet object.
+        column_name: The header string to find.
+
+    Returns:
+        An integer representing the 1-indexed column position of the header,
+        or None if the header is not found.
+    """
+    header = worksheet.get_row(1, include_tailing_empty=False)
+    try:
+        # Convert to 1-indexed
+        column_index = header.index(column_name) + 1
+        return column_index
+    except ValueError:
+        return None

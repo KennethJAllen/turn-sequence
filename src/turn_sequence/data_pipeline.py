@@ -6,6 +6,7 @@ from pygsheets.exceptions import SpreadsheetNotFound
 from pygsheets import Spreadsheet, Worksheet
 from turn_sequence.map_model import MapModel
 from turn_sequence.config import load_project_config, ProjectConfig
+from turn_sequence import utils
 
 def get_gsheet(config: ProjectConfig,
                email: str=None,
@@ -82,12 +83,16 @@ def add_map_model_to_gsheet(map_model: MapModel, spreadsheet: Spreadsheet, proje
     place_worksheet = spreadsheet.worksheet('title', project_config.sheet.place_worksheet)
     place_id = map_model.place.id
 
-    existing_place_ids = place_worksheet.get_col(1, include_tailing_empty=False)[1:]
-    if place_id in existing_place_ids:
+    place_id_idx = utils.get_column_index(place_worksheet, project_config.place_columns.id)
+    # Get id column values. Skip header.
+    existing_place_ids = place_worksheet.get_col(place_id_idx, include_tailing_empty=False)[1:]
+    if str(place_id) in existing_place_ids:
         print(f"Place {map_model.place.display_name} with id {place_id} already exists. Skipping insertion into place worksheet.")
     else:
         add_df_to_worksheet(map_model.place.df, place_worksheet)
 
+    # TODO: If points already exist in database, skip insertion.
+    # TODO: Choose the ID by choosing the largest id from spreadsheet and incrementing from there
     # Next, add points to sheet
     point_worksheet = spreadsheet.worksheet('title', project_config.sheet.point_worksheet)
     add_df_to_worksheet(map_model.points.df, point_worksheet)

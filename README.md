@@ -22,6 +22,14 @@ In practice, we still make multiple of the same direction turns in a row. But ho
 - Set up environment: `uv sync`
 - Build project `uv build`
 
+## Data
+
+Data is pulled from Google Roads and Routes APIs, processed, and stored in [Google Sheets](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1756577916#gid=1756577916).
+
+### Why Google Sheets?
+
+While a SQL database would be more natural, Google Sheets has the convenient option of easily publically sharing the data as read only. 
+
 ## Re-create Google Sheets Database
 
 ### API Key
