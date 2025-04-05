@@ -72,7 +72,7 @@ def get_double_turns(turns: list[str]) -> list[str]:
         double_turns.append(turn + t_next)
     return double_turns
 
-def get_column_index(worksheet: Worksheet, column_name: str) -> int:
+def get_column_index_from_name(worksheet: Worksheet, column_name: str) -> int:
     """
     Retrieve the column index for a given header in a pygsheets worksheet.
 
@@ -91,3 +91,20 @@ def get_column_index(worksheet: Worksheet, column_name: str) -> int:
         return column_index
     except ValueError:
         return None
+
+def get_max_value_from_worksheet_column(worksheet: Worksheet, column_name: str) -> float:
+    """
+    Gets the maximum value from a worksheet corresponding to a given column name.
+    If there are no numeric values in the column, return 0.
+    """
+    col_index = get_column_index_from_name(worksheet, column_name)
+    col_values = worksheet.get_col(col_index, include_tailing_empty=False)
+    numeric_values = []
+    for value in col_values[1:]:
+        try:
+            numeric_values.append(float(value))
+        except (ValueError, TypeError):
+            continue
+    if not numeric_values:
+        return 0
+    return max(numeric_values)

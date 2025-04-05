@@ -72,18 +72,19 @@ def _init_sheet(spreadsheet: Spreadsheet, config: ProjectConfig) -> None:
     point_ws.insert_rows(row=0, number=1, values=[list(config.point_columns)])
     directions_ws.insert_rows(row=0, number=1, values=[list(config.direction_columns)])
 
-def add_map_model_to_gsheet(map_model: MapModel, spreadsheet: Spreadsheet, project_config: ProjectConfig) -> None:
+def add_map_model_to_gsheet(map_model: MapModel, spreadsheet: Spreadsheet, config: ProjectConfig) -> None:
     """
     Push all data from the Place, PlacePoints, and Directions dataframes
     from MapModel to Google Sheets.
 
     - Checks if a row with the same unique place id already exists. If it does, do not push that dataframe.
     """
-    # First, add place to sheet
-    place_worksheet = spreadsheet.worksheet('title', project_config.sheet.place_worksheet)
+    print(f"Pushing {map_model.place.display_name} to spreadhseet...")
+    ### Add place to sheet ##
+    place_worksheet = spreadsheet.worksheet('title', config.sheet.place_worksheet)
     place_id = map_model.place.id
 
-    place_id_idx = utils.get_column_index(place_worksheet, project_config.place_columns.id)
+    place_id_idx = utils.get_column_index_from_name(place_worksheet, config.place_columns.id)
     # Get id column values. Skip header.
     existing_place_ids = place_worksheet.get_col(place_id_idx, include_tailing_empty=False)[1:]
     if str(place_id) in existing_place_ids:
@@ -91,15 +92,24 @@ def add_map_model_to_gsheet(map_model: MapModel, spreadsheet: Spreadsheet, proje
     else:
         add_df_to_worksheet(map_model.place.df, place_worksheet)
 
-    # TODO: If points already exist in database, skip insertion.
-    # TODO: Choose the ID by choosing the largest id from spreadsheet and incrementing from there
-    # Next, add points to sheet
-    point_worksheet = spreadsheet.worksheet('title', project_config.sheet.point_worksheet)
-    add_df_to_worksheet(map_model.points.df, point_worksheet)
+    ### Add points to sheet ###
+    point_worksheet = spreadsheet.worksheet('title', config.sheet.point_worksheet)
+    max_existing_point_id = utils.get_max_value_from_worksheet_column(point_worksheet, config.point_columns.id)
+    point_df = map_model.points.df.copy()
+    # Add maximum exiting point id in worksheet to all point ids to ensure uniqueness
+    point_df.loc[:, config.point_columns.id] += max_existing_point_id + 1
+    add_df_to_worksheet(point_df, point_worksheet)
 
-    # Finally add directions to sheet
-    directions_sheet = spreadsheet.worksheet('title', project_config.sheet.directions_worksheet)
-    add_df_to_worksheet(map_model.directions.df, directions_sheet)
+    ### Add directions to sheet ###
+    directions_worksheet = spreadsheet.worksheet('title', config.sheet.directions_worksheet)
+    direction_df = map_model.directions.df.copy()
+    # Add maximum exiting point id in work sheet to all foreign key columns to point ids for consistency
+    point_foreign_key_columns = [config.direction_columns.origin_id, config.direction_columns.destination_id]
+    direction_df.loc[:, point_foreign_key_columns] += max_existing_point_id + 1
+    # Add maximum existing direction id in worksheet to all direction ids to ensure uniqueness
+    max_existing_direction_id = utils.get_max_value_from_worksheet_column(directions_worksheet, config.direction_columns.id)
+    direction_df.loc[:, config.direction_columns.id] += max_existing_direction_id + 1
+    add_df_to_worksheet(direction_df, directions_worksheet)
 
 def add_df_to_worksheet(df: pd.DataFrame, worksheet: Worksheet) -> None:
     """
@@ -111,10 +121,10 @@ def add_df_to_worksheet(df: pd.DataFrame, worksheet: Worksheet) -> None:
     # Reorder the DataFrame columns to match the sheet header
     df = df[header]
 
-    col_data = worksheet.get_col(1, include_tailing_empty=False)
-    start_row = len(col_data) + 1
+    dummy_column = worksheet.get_col(1, include_tailing_empty=False)
+    start_row = len(dummy_column) + 1
 
-    # Add rows if needed to ensure the target row exists
+    # Add rows to worksheet if needed to ensure data gets inserted
     if start_row > worksheet.rows:
         worksheet.add_rows(start_row - worksheet.rows)
 
@@ -129,14 +139,13 @@ def main():
     config_path = Path.cwd() / "config" / "project_config.yaml"
     config = load_project_config(config_path)
 
-    spreadsheet = get_gsheet(config, email=email, publish=True, reset=False)
+    spreadsheet = get_gsheet(config, email=email, publish=True, reset=True)
 
-    name = "Philadelphia, Pennsylvania, USA"
-    #name = "Boston, Massachusetts, USA"
-    api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-    model = MapModel(name, config, api_key=api_key)
+    for place_name in config.map_.places:
+        api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+        model = MapModel(place_name, config, api_key=api_key)
 
-    add_map_model_to_gsheet(model, spreadsheet, config)
+        add_map_model_to_gsheet(model, spreadsheet, config)
 
 if __name__ == "__main__":
     main()

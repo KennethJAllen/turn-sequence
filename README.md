@@ -24,7 +24,9 @@ In practice, we still make multiple of the same direction turns in a row. But ho
 
 ## Data
 
-Data is pulled from Google Roads and Routes APIs, processed, and stored in [Google Sheets](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1756577916#gid=1756577916).
+Data is pulled from Google Roads and Routes APIs, processed, and stored in Google Sheets.
+
+[Route data that I have processed and stored can be viewed as read-only here.](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1756577916#gid=1756577916).
 
 ### Why Google Sheets?
 

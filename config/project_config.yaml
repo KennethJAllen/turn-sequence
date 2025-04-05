@@ -36,4 +36,4 @@ direction_columns:
   destination_id: "destination_id"
   raw_directions: "raw_directions"
   lr_directions: left_right_directions"
-  double_directions: "double_directions"
+  direction_pairs: "direction_pairs"

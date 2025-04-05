@@ -67,7 +67,7 @@ class DirectionColumns:
     place_id: str
     raw_directions: str
     lr_directions: str
-    double_directions: str
+    direction_pairs: str
 
     def __iter__(self):
         yield from (
@@ -77,7 +77,7 @@ class DirectionColumns:
             self.place_id,
             self.raw_directions,
             self.lr_directions,
-            self.double_directions
+            self.direction_pairs
         )
 
 @dataclass

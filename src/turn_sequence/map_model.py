@@ -93,7 +93,7 @@ class PlacePoints:
         If they are not in the polygon bounding the Place, they are tossed.
         Returns a list of points spaced dx, dy apart inside the polygon.
         """
-        print("Partioning place into evenly spaced points...")
+        print(f"Partioning {self.place.display_name} into evenly spaced points...")
         minx, miny, maxx, maxy = self.place.polygon.bounds
         dx = (maxx - minx)/num
         dy = (maxy - miny)/num
@@ -214,7 +214,7 @@ class Directions:
         destination_id_col = []
         raw_directions_col = []
         lr_directions_col = []
-        double_directions_col = []
+        direction_pairs_col = []
 
         for origin_id, origin in enumerate(points):
             for destination_id, destination in enumerate(points):
@@ -225,13 +225,13 @@ class Directions:
                     continue
                 raw_directions = utils.get_maneuvers_from_routes(route_data)
                 lr_directions = utils.get_turns_from_maneuvers(raw_directions)
-                double_directions = utils.get_double_turns(lr_directions)
+                direction_pairs = utils.get_double_turns(lr_directions)
 
                 origin_id_col.append(origin_id)
                 destination_id_col.append(destination_id)
                 raw_directions_col.append(raw_directions)
                 lr_directions_col.append(lr_directions)
-                double_directions_col.append(double_directions)
+                direction_pairs_col.append(direction_pairs)
 
         ids = tuple(range(len(raw_directions_col)))
         data = {
@@ -241,7 +241,7 @@ class Directions:
             direction_columns.place_id: self.points.place.id,
             direction_columns.raw_directions: raw_directions_col,
             direction_columns.lr_directions: lr_directions_col,
-            direction_columns.double_directions: double_directions_col
+            direction_columns.direction_pairs: direction_pairs_col
         }
         return pd.DataFrame(data)
 
@@ -267,8 +267,7 @@ def main():
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     config_path = Path.cwd() / "config" / "project_config.yaml"
     config = load_project_config(config_path)
-    name = "Philadelphia, Pennsylvania, USA"
-    #name = "Boston, Massachusetts, USA"
+    name = config.map_.places[0]
 
     model = MapModel(name, config, api_key=api_key)
     print(model.place.df)
