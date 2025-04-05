@@ -4,7 +4,7 @@
 
 Uses Google Geocode API and Routes API to analyze the frequency of left-right and right-left turns vs. left-left and right-right turns.
 
-# Hypothesis
+## Hypothesis
 
 While driving, if there are multiple lanes to take a turn, while lane should you choose?
 
@@ -15,6 +15,22 @@ This is because when traveling, each turn is an overcorrection towards your dest
 For a simple model, if we are traveling on a grid, then any optimal path will alternate between left and right turns.
 
 In practice, we still make multiple of the same direction turns in a row. But how often? This project aims to answer that question.
+
+### Approach
+
+To answer this question, I decided to sample paths between two destinations in a city, count the number of left and right turns, and calculate the ratio of the number of left-then-right and right-then-left turns to the number of left-then-left and right-then-right turns.
+
+### How do you sample paths from a city?
+
+- Use `osmnx` to generate a geometric polygon from the city
+- Partition latitude and longitude into evenly spaced grid points equal to `map.granulariy` in `project_config.yaml`.
+- Check if each grid point is in the city polygon. Toss it if it is not.
+- Snap each grid point to the road with the Google Roads API.
+    - If a point does not have a road nearby it is tossed. This is useful for city polygons like Boston's which have a large portion in the ocean.
+- Loop over each pair of snapped points. If they are different, calculate the route betweenn them with the Google Routes API.
+    - The number of calls to Google Routes is $O(\text{granularity}^4)$.
+- Process the ouptut directions into a sequence of left and right turns.
+
 
 ## Installation
 

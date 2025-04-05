@@ -194,7 +194,7 @@ class Directions:
                 "routes.legs.steps.navigationInstruction.maneuver"
             )
         }
-
+        #TODO: Get distance and store that in database
         body = utils.format_route_body(origin, destination)
 
         response = requests.post(url, headers=headers, json=body, timeout=15)
@@ -259,6 +259,7 @@ class MapModel:
             self.directions = None
 
 def main():
+    #TODO: Move this to tests
     from pathlib import Path
     import os
     from dotenv import load_dotenv

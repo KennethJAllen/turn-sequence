@@ -139,7 +139,7 @@ def main():
     config_path = Path.cwd() / "config" / "project_config.yaml"
     config = load_project_config(config_path)
 
-    spreadsheet = get_gsheet(config, email=email, publish=True, reset=True)
+    spreadsheet = get_gsheet(config, email=email, publish=True, reset=False)
 
     for place_name in config.map_.places:
         api_key = os.getenv("GOOGLE_MAPS_API_KEY")

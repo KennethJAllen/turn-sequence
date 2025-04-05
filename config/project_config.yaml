@@ -12,7 +12,7 @@ map:
     "Philadelphia, Pennsylvania, USA",
     "Boston, Massachusetts, USA"
     ]
-  granulariy: 3
+  granulariy: 8
 
 place_columns:
   id: "osm_id"

@@ -1,4 +1,5 @@
 """Utility functions"""
+import pandas as pd
 from shapely.geometry import Point
 from pygsheets import Worksheet
 
@@ -108,3 +109,12 @@ def get_max_value_from_worksheet_column(worksheet: Worksheet, column_name: str) 
     if not numeric_values:
         return 0
     return max(numeric_values)
+
+def get_gsheet_df(sheet_id: str, gid: int) -> pd.DataFrame:
+    """
+    Reads worksheet correspongin to gid
+    from google sheets and returns it as a dataframe.
+    """
+    url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&id={sheet_id}&gid={gid}'
+    df = pd.read_csv(url)
+    return df
