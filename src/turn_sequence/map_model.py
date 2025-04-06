@@ -274,7 +274,6 @@ class MapModel:
             self.directions = None
 
 def main():
-    #TODO: Move this to tests
     from pathlib import Path
     import os
     from dotenv import load_dotenv

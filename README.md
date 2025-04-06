@@ -2,19 +2,13 @@
 
 ## Summary
 
-Uses Google Geocode API and Routes API to analyze the frequency of left-right and right-left turns vs. left-left and right-right turns.
+Analyze the frequency of taking alternating direction turns while driving vs. taking multiple of the same direction turns in a row using Google Geocode API and Routes API.
 
-## Hypothesis
+## Which Lane to Turn In?
 
-While driving, if there are multiple lanes to take a turn, while lane should you choose?
+If there are multiple lanes to take a turn, while lane should you choose?
 
-The hypothesis is choosing the right-most lane when taking a left turn, or the left-most lane when taking a right turn is most otimal.
-
-This is because when traveling, each turn is an overcorrection towards your destination.
-
-For a simple model, if we are traveling on a grid, then any optimal path will alternate between left and right turns.
-
-In practice, we still make multiple of the same direction turns in a row. But how often? This project aims to answer that question.
+The hypothesis is choosing the right-most lane when taking a left turn, or the left-most lane when taking a right turn is optimal on average. This is because when traveling, each turn is an overcorrection towards your destination. For a simple model, if we are traveling on a grid, then any optimal path will alternate between left and right turns. In practice, we still make multiple of the same direction turns in a row. But how often? This project aims to answer that question.
 
 ### Approach
 
@@ -28,9 +22,16 @@ To answer this question, I decided to sample paths between two destinations in a
 - Snap each grid point to the road with the Google Roads API.
     - If a point does not have a road nearby it is tossed. This is useful for city polygons like Boston's which have a large portion in the ocean.
 - Loop over each pair of snapped points. If they are different, calculate the route betweenn them with the Google Routes API.
-    - The number of calls to Google Routes is $O(\text{granularity}^4)$.
+    - The number of calls to Google Routes is $O(\text{granularity}^4)$. Therefore the granularity should be chosen small, e.g. less than 10.
 - Process the ouptut directions into a sequence of left and right turns.
 
+## Results
+
+### Visualization
+
+To ensure we only calculate routes between points on roads, and not bodies of water for example, each grid point is snapped to the road using the Google Roads API. Points that are snapped to a road are shown as green. Points that were not able to snap to a road are in red. More plots are availible in the `plots/` directory.
+
+![Boston MA](plots/boston_massachusetts_usa.png)
 
 ## Installation
 

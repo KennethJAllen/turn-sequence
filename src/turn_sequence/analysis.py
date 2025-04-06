@@ -82,16 +82,20 @@ def plot_place_points_from_df(name: str, points_df: pd.DataFrame, point_columns:
     ax.set_extent(bounds, crs=ccrs.PlateCarree())
 
     # plot the grid points
-    ax.plot(points_df[point_columns.grid_lon], points_df[point_columns.grid_lat], 'r+', transform=ccrs.PlateCarree())
+    ax.plot(points_df[point_columns.grid_lon], points_df[point_columns.grid_lat], 'r+',
+            label='Grid Points', transform=ccrs.PlateCarree())
 
     # plot the snapped points
-    ax.plot(points_df[point_columns.snapped_lon], points_df[point_columns.snapped_lat], 'go', transform=ccrs.PlateCarree())
+    ax.plot(points_df[point_columns.snapped_lon], points_df[point_columns.snapped_lat], 'go',
+            label='Snapped to Road Points', transform=ccrs.PlateCarree())
 
     # plot the place polygon
     polygon = gdf.loc[0,'geometry']
     ax.add_geometries([polygon], crs=ccrs.PlateCarree(), edgecolor='blue', facecolor='none', linewidth=2)
 
-    plt.savefig(plot_path)
+    plt.title(name)
+    plt.legend()
+    plt.savefig(plot_path, bbox_inches='tight', pad_inches=0.2)
     plt.close()
 
 def main():
