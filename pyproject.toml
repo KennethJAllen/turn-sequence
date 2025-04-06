@@ -1,6 +1,6 @@
 [project]
 name = "turn_sequence"
-version = "0.1.0"
+version = "1.0.0"
 description = "Analyze the patterns in consecutive turns given by driving instructions."
 readme = "README.md"
 requires-python = ">=3.12"
