@@ -2,7 +2,7 @@
 
 ## Summary
 
-Analyze the frequency of taking alternating direction turns while driving vs. taking multiple of the same direction turns in a row using Google Geocode API and Routes API.
+Analyze the frequency of taking alternating direction turns while driving vs. taking consecutive same-direction turns. Uses Google Geocode API and Routes API.
 
 ## Which Lane to Turn In?
 
