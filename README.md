@@ -12,7 +12,7 @@ The hypothesis is choosing the right-most lane when taking a left turn, or the l
 
 ### Approach
 
-To answer this question, I decided to sample paths between two destinations in a city, count the number of left and right turns, and calculate the ratio of the number of left-then-right and right-then-left turns to the number of left-then-left and right-then-right turns.
+To answer this question, paths are sampled between pairs of points in a city, count the number of left and right turns, and calculate the ratio of the number of left-then-right and right-then-left turns to the total number of turn pairs.
 
 ### How do you sample paths from a city?
 
@@ -25,13 +25,49 @@ To answer this question, I decided to sample paths between two destinations in a
     - The number of calls to Google Routes is $O(\text{granularity}^4)$. Therefore the granularity should be chosen small, e.g. less than 10.
 - Process the ouptut directions into a sequence of left and right turns.
 
-## Results
+## Analysis
+
+### Results
+
+Directions were calculated between every two pairs of distinct snapped points. For all directions, the alternating turn fraction was calculated:
+
+$$
+\frac{\text{num(LR)} + \text{num(RL)}}{\text{num(LL)} + \text{num(LR)} + \text{num(RL)} + \text{num(RR)}}.
+$$
+
+The alternating turn fraction was then averaged over all directions. For each city, the results are in the following table:
+
+| Place                           | Alternating Turn Percentage |
+|---------------------------------|-----------------------------|
+| New York City, New York, USA    | 54.4%                       |
+| Boston, Massachusetts, USA      | 54.9%                       |
+| Philadelphia, Pennsylvania, USA | 53.9%                       |
+| San Francisco, California, USA  | 65.6%                       |
+| Los Angeles, California, USA    | 53.3%                       |
+| Chicago, Illinois, USA          | 54.3%                       |
+| Miami, Florida, USA             | 54.6%                       |
+| London, UK                      | 43.3%                       |
+| Paris, France                   | 52.9%                       |
+| Amsterdam, Netherlands          | 50.6%                       |
+| Berlin, Germany                 | 60.7%                       |
+| Rome, Italy                     | 46.0%                       |
+| Rio de Janeiro, Brazil          | 54.6%                       |
+| Mumbai, India                   | 56.5%                       |
+| Singapore                       | 51.0%                       |
 
 ### Visualization
 
 To ensure we only calculate routes between points on roads, and not bodies of water for example, each grid point is snapped to the road using the Google Roads API. Points that are snapped to a road are shown as green. Points that were not able to snap to a road are in red. More plots are availible in the `plots/` directory.
 
 ![Boston MA](plots/boston_massachusetts_usa.png)
+
+### Conclusion
+
+In all places except London, UK and Rome, Italy, the number of alternatting turns is higher than the number of consecutive same-direction turns. In San Francisco, USA, there are almost twice as many alternating turns as there are consecutive same-direction turns.
+
+Therefore, when driving in these cities, if you take a right turn your next turn your next turn is most likely a left, and when taking a left turn your next turn is most likely a right.
+
+In conclusion, use the right-most lane when taking a left turn and the left-most lane when taking a right turn.
 
 ## Installation
 
@@ -49,7 +85,7 @@ Data is pulled from Google Roads and Routes APIs, processed, and stored in Googl
 
 While a SQL database would be more natural, Google Sheets has the convenient option of easily publically sharing the data as read only. 
 
-## Re-create Google Sheets Database
+## Re-Create Google Sheets Database
 
 ### API Key
 To recreate the database, you need a [Google Cloud](https://console.cloud.google.com/) API key with access to the Google Sheets API, Google Drive API, Roads API, and Routes API.
