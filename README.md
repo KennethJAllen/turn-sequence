@@ -79,7 +79,9 @@ In conclusion, use the right-most lane when taking a left turn and the left-most
 
 Data is pulled from Google Roads and Routes APIs, processed, and stored in Google Sheets.
 
-[Route data that I have processed and stored can be viewed as read-only here.](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1705379481#gid=1705379481). It cost $264 of $300 of free Google Cloud credits to generate this data from the config in `sheet_config.yaml` with `granularity = 12`.
+[Route data that I have processed and stored can be viewed as read-only here](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1705379481#gid=1705379481).
+
+It cost $264 of $300 of free Google Cloud credits to generate this data from the config in `sheet_config.yaml` with `granularity = 12`.
 
 ### Why Google Sheets?
 
