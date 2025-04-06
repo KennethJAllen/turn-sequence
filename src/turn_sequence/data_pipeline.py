@@ -143,9 +143,14 @@ def main():
 
     for place_name in config.map_.places:
         api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-        model = MapModel(place_name, config, api_key=api_key)
+        try:
+            model = MapModel(place_name, config, api_key=api_key)
 
-        add_map_model_to_gsheet(model, spreadsheet, config)
+            if len(model.directions) > 0:
+                add_map_model_to_gsheet(model, spreadsheet, config)
+        except TypeError as e:
+            # Skip if geocode not successful
+            print(f"Geocode not successful: {e}")
 
 if __name__ == "__main__":
     main()

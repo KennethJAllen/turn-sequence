@@ -65,6 +65,9 @@ class PlacePoints:
             self.snapped_points = None
         self.df = self._to_df(point_columns)
 
+    def __len__(self):
+        return len(self.df)
+
     def _to_df(self, point_columns: PointColumns) -> pd.DataFrame:
         """Converts data to dataframe."""
         ids = tuple(range(len(self.grid_points)))
@@ -178,6 +181,9 @@ class Directions:
             points = snapped_points
         self.df = self._to_df(points, direction_columns, api_key)
 
+    def __len__(self):
+        return len(self.df)
+
     def _get_route_data(self, origin: Point, destination: Point, api_key: str):
         """
         Given an origin and desitination as Point objects,
@@ -191,10 +197,11 @@ class Directions:
             "Content-Type": "application/json; charset=UTF-8",
             "X-Goog-Api-Key": api_key,
             "X-Goog-FieldMask": (
+                "routes.distanceMeters,"
                 "routes.legs.steps.navigationInstruction.maneuver"
             )
         }
-        #TODO: Get distance and store that in database
+
         body = utils.format_route_body(origin, destination)
 
         response = requests.post(url, headers=headers, json=body, timeout=15)
@@ -215,6 +222,7 @@ class Directions:
         raw_directions_col = []
         lr_directions_col = []
         direction_pairs_col = []
+        distance_km_col = []
 
         for origin_id, origin in enumerate(points):
             for destination_id, destination in enumerate(points):
@@ -232,6 +240,12 @@ class Directions:
                 raw_directions_col.append(raw_directions)
                 lr_directions_col.append(lr_directions)
                 direction_pairs_col.append(direction_pairs)
+                distance_m = route_data['routes'][0]['distanceMeters']
+                if distance_m is not None:
+                    distance_km = distance_m / 1000
+                else:
+                    distance_km = None
+                distance_km_col.append(distance_km)
 
         ids = tuple(range(len(raw_directions_col)))
         data = {
@@ -239,6 +253,7 @@ class Directions:
             direction_columns.origin_id: origin_id_col,
             direction_columns.destination_id: destination_id_col,
             direction_columns.place_id: self.points.place.id,
+            direction_columns.distance_km: distance_km_col,
             direction_columns.raw_directions: raw_directions_col,
             direction_columns.lr_directions: lr_directions_col,
             direction_columns.direction_pairs: direction_pairs_col

@@ -9,10 +9,25 @@ sheet:
 
 map:
   places: [
+    "New York City, New York, USA",
+    "Boston, Massachusetts, USA",
     "Philadelphia, Pennsylvania, USA",
-    "Boston, Massachusetts, USA"
+    "San Francisco, California, USA",
+    "Los Angeles, California, USA",
+    "Chicago, Illinois, USA",
+    "Miami, Florida, USA",
+    "London, UK",
+    "Paris, France",
+    "Amsterdam, Netherlands",
+    "Berlin, Germany",
+    "Rome, Italy",
+    "Rio de Janeiro, Brazil",
+    "Mumbai, India",
+    "Singapore",
+    "Melbourne, Australia",
+    "Toronto, Canada"
     ]
-  granulariy: 8
+  granulariy: ~
 
 place_columns:
   id: "osm_id"
@@ -34,6 +49,7 @@ direction_columns:
   place_id: "osm_id"
   origin_id: "origin_id"
   destination_id: "destination_id"
+  distance_km: "distance_km"
   raw_directions: "raw_directions"
   lr_directions: left_right_directions"
   direction_pairs: "direction_pairs"

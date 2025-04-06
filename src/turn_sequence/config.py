@@ -65,6 +65,7 @@ class DirectionColumns:
     origin_id: str
     destination_id: str
     place_id: str
+    distance_km: str
     raw_directions: str
     lr_directions: str
     direction_pairs: str
@@ -75,6 +76,7 @@ class DirectionColumns:
             self.origin_id,
             self.destination_id,
             self.place_id,
+            self.distance_km,
             self.raw_directions,
             self.lr_directions,
             self.direction_pairs
