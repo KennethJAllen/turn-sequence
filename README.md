@@ -37,7 +37,7 @@ $$
 
 Where $LR$ is a left-the-right turn, $RL$ is a right-then-left turn, $LL$ is a left-then-left turn, and $RR$ is a right-then-right turn. The alternating turn fraction is averaged over all paths. For each city, the results are in the following table:
 
-| Place                           | Mean Alternating Turn Percentage    | Number of Paths | Alternating Turn Percentage Standard Deviation | 95% Mean Confidence Interval |
+| Place                           | Mean Alternating Turn Percentage    | Number of Paths | Alternating Turn Percentage Standard Deviation | Mean 95% Confidence Interval |
 |---------------------------------|-------------------------------------|-----------------|------------------------------------------------|------------------------------|
 | New York City, New York, USA    | 54.4%                               | 1980            | 18.0                                           | (53.6, 55.2)                 |
 | Boston, Massachusetts, USA      | 54.9%                               | 870             | 19.3                                           | (53.6, 56.2)                 |
