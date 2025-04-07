@@ -102,7 +102,7 @@ Route data that I have processed and stored can be viewed on [Google Sheets](htt
 
 ### Why Google Sheets?
 
-While a SQL database would be more natural, Google Sheets has the convenient option of easily publicly sharing the data as read only. 
+While a SQL database would be easier and require less custom logic, Google Sheets has the convenient option of easily publicly sharing the data as read only. 
 
 ## Using The Package
 
