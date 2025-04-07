@@ -12,7 +12,7 @@ The hypothesis is choosing the right-most lane when taking a left turn, or the l
 
 ### Approach
 
-To answer this question, paths are sampled between pairs of points in a city, count the number of left and right turns, and calculate the ratio of the number of left-then-right and right-then-left turns to the total number of turn pairs.
+To answer this question, points are sampled in a city. Directions are clculated between all point pairs, then processed to count the number of left and right turn. Then the ratio of the number of alternating consecutive turns to total number of pairs of turns is calculated and averaged over all paths.
 
 ### How do you sample paths from a city?
 
