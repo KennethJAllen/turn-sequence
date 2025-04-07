@@ -21,9 +21,9 @@ To answer this question, paths are sampled between pairs of points in a city, co
 - Check if each grid point is in the city polygon. Toss it if it is not.
 - Snap each grid point to the road with the Google Roads API.
     - If a point does not have a road nearby it is tossed. This is useful for city polygons like Boston's which have a large portion in the ocean.
-- Loop over each pair of snapped points. If they are different, calculate the route betweenn them with the Google Routes API.
+- Loop over each pair of snapped points. If they are different, calculate the route between them with the Google Routes API.
     - The number of calls to Google Routes is $O(\text{granularity}^4)$. Therefore the granularity should be chosen small, e.g. less than 10.
-- Process the ouptut directions into a sequence of left and right turns.
+- Process the output directions into a sequence of left and right turns.
 
 ## Analysis
 
@@ -56,11 +56,11 @@ Where $LR$ is a left-the-right turn, $RL$ is a right-then-left turn, $LL$ is a l
 | Singapore                       | 51.0%                               | 156             | 15.3                                           |
 | Total                           | 52.6%                               | 33981           | 19.1                                           |
 
-Note that a percentage above 50% means you are more likely tu alternate turning directions compared to taking consecutive same-direction turns.
+Note that a percentage above 50% means you are more likely to alternate turning directions compared to taking consecutive same-direction turns.
 
 ### Visualization
 
-To ensure we only calculate routes between points on roads, and not bodies of water for example, each grid point is snapped to the road using the Google Roads API. Points that are snapped to a road are shown as green. Points that were not able to snap to a road are in red. More plots are availible in the `plots/` directory.
+To ensure we only calculate routes between points on roads, and not bodies of water for example, each grid point is snapped to the road using the Google Roads API. Points that are snapped to a road are shown as green. Points that were not able to snap to a road are in red. More plots are available in the `plots/` directory.
 
 ![Boston MA](plots/boston_massachusetts_usa.png)
 
@@ -72,7 +72,7 @@ The total average percentage of alternating turns is 52.6% which exceeds 50%, su
 
 #### Variation By City
 
-In all places except London, UK and Rome, Italy, the number of alternatting turns is higher than the number of consecutive same-direction turns. Some notable cities are
+In all places except London, UK and Rome, Italy, the number of alternating turns is higher than the number of consecutive same-direction turns. Some notable cities are
 
 - San Francisco (65.6%) has the highest percentage but also the smallest number of paths (30), so that high figure may be less reliable.
 
@@ -100,7 +100,7 @@ Route data that I have processed and stored can be viewed on [Google Sheets](htt
 
 ### Why Google Sheets?
 
-While a SQL database would be more natural, Google Sheets has the convenient option of easily publically sharing the data as read only. 
+While a SQL database would be more natural, Google Sheets has the convenient option of easily publicly sharing the data as read only. 
 
 ## Using The Package
 
@@ -113,7 +113,7 @@ While a SQL database would be more natural, Google Sheets has the convenient opt
 
 ### Analysis
 
-The analysis can be re-created with the `analysis.py` script in the `turn_sequence` directory. An API key is not required to run it as the data is [Google Sheets](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1705379481#gid=1705379481) is publically read-only.
+The analysis can be re-created with the `analysis.py` script in the `turn_sequence` directory. An API key is not required to run it as the data is [Google Sheets](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1705379481#gid=1705379481) is publicly read-only.
 
 ### Re-create Google Sheets Database
 
