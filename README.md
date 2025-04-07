@@ -37,24 +37,24 @@ $$
 
 Where $LR$ is a left-the-right turn, $RL$ is a right-then-left turn, $LL$ is a left-then-left turn, and $RR$ is a right-then-right turn. The alternating turn fraction is averaged over all paths. For each city, the results are in the following table:
 
-| Place                           | Average Alternating Turn Percentage | Number of Paths | Alternating Turn Percentage Standard Deviation |
-|---------------------------------|-------------------------------------|-----------------|------------------------------------------------|
-| New York City, New York, USA    | 54.4%                               | 1980            | 18.0                                           |
-| Boston, Massachusetts, USA      | 54.9%                               | 870             | 19.3                                           |
-| Philadelphia, Pennsylvania, USA | 53.9%                               | 2858            | 19.2                                           |
-| San Francisco, California, USA  | 65.6%                               | 30              | 22.5                                           |
-| Los Angeles, California, USA    | 53.3%                               | 1803            | 19.3                                           |
-| Chicago, Illinois, USA          | 54.3%                               | 2069            | 18.3                                           |
-| Miami, Florida, USA             | 54.6%                               | 1630            | 25.5                                           |
-| London, UK                      | 43.3%                               | 4692            | 16.8                                           |
-| Paris, France                   | 52.9%                               | 5683            | 20.5                                           |
-| Amsterdam, Netherlands          | 50.6%                               | 2749            | 18.6                                           |
-| Berlin, Germany                 | 60.7%                               | 2970            | 16.8                                           |
-| Rome, Italy                     | 46.0%                               | 1260            | 17.8                                           |
-| Rio de Janeiro, Brazil          | 54.6%                               | 1332            | 14.4                                           |
-| Mumbai, India                   | 56.5%                               | 2969            | 15.4                                           |
-| Singapore                       | 51.0%                               | 156             | 15.3                                           |
-| Total                           | 52.6%                               | 33981           | 19.1                                           |
+| Place                           | Mean Alternating Turn Percentage    | Number of Paths | Alternating Turn Percentage Standard Deviation | 95% Mean Confidence Interval |
+|---------------------------------|-------------------------------------|-----------------|------------------------------------------------|------------------------------|
+| New York City, New York, USA    | 54.4%                               | 1980            | 18.0                                           | (53.6, 55.2)                 |
+| Boston, Massachusetts, USA      | 54.9%                               | 870             | 19.3                                           | (53.6, 56.2)                 |
+| Philadelphia, Pennsylvania, USA | 53.9%                               | 2858            | 19.2                                           | (53.2, 54.6)                 |
+| San Francisco, California, USA  | 65.6%                               | 30              | 22.5                                           | (57.0, 74.1)                 |
+| Los Angeles, California, USA    | 53.3%                               | 1803            | 19.3                                           | (52.4, 54.2)                 |
+| Chicago, Illinois, USA          | 54.3%                               | 2069            | 18.3                                           | (53.6, 55.1)                 |
+| Miami, Florida, USA             | 54.6%                               | 1630            | 25.5                                           | (53.3, 55.8)                 |
+| London, UK                      | 43.3%                               | 4692            | 16.8                                           | (42.8, 43.8)                 |
+| Paris, France                   | 52.9%                               | 5683            | 20.5                                           | (52.4, 53.5)                 |
+| Amsterdam, Netherlands          | 50.6%                               | 2749            | 18.6                                           | (49.9, 51.3)                 |
+| Berlin, Germany                 | 60.7%                               | 2970            | 16.8                                           | (60.1, 61.3)                 |
+| Rome, Italy                     | 46.0%                               | 1260            | 17.8                                           | (45.1, 47.0)                 |
+| Rio de Janeiro, Brazil          | 54.6%                               | 1332            | 14.4                                           | (53.8, 55.4)                 |
+| Mumbai, India                   | 56.5%                               | 2969            | 15.4                                           | (56.0, 57.1)                 |
+| Singapore                       | 51.0%                               | 156             | 15.3                                           | (48.5, 53.4)                 |
+| Total                           | 52.6%                               | 33981           | 19.1                                           | (52.4, 52.8)                 |
 
 Note that a percentage above 50% means you are more likely to alternate turning directions compared to taking consecutive same-direction turns.
 
@@ -88,7 +88,9 @@ The standard deviation for each location is large, ranging from about 15 to 20 p
 
 #### Conclusion
 
-The proportion of alternating turns is slightly, but consistently, above 50%, with variability between cities. Meaning when taking a left turn, your next turn is most likely a right, and after taking a right turn, the next turn is most likely a left.
+The proportion of alternating turns is consistently above 50%, with a few exceptions. Many cities have 95% confidence intervals for the mean strictly above 50%.
+
+This means when taking a left turn, your next turn is most likely a right. After taking a right turn, the next turn is most likely a left.
 
 ## Data
 

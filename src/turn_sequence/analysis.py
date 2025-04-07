@@ -3,6 +3,7 @@ from pathlib import Path
 import ast
 import numpy as np
 import pandas as pd
+import scipy.stats as st
 import matplotlib.pyplot as plt
 import osmnx as ox
 import cartopy.crs as ccrs
@@ -135,28 +136,34 @@ def main():
     plot_dir = Path.cwd() / "plots"
     plot_dir.mkdir(exist_ok=True)
 
-    # Calculate alternating turn percentage for each place
+    # Calculate alternating turn percentage and statistics for each place
+    confidence = 0.95
     for name in project_config.map_.places:
         plotname = name.lower().replace(', ', '_') + '.png'
         plot_path = plot_dir / plotname
         plot_place_points_from_df(name, points_df, project_config.point_columns, plot_path)
         alternating_turn_percentages = place_alternating_turn_percentages(name, places_df, directions_df, project_config)
-        #average_alternating_turns = sum(alternating_turn_metrics) / len(alternating_turn_metrics)
-        average_alternating_turn_percentages = np.mean(alternating_turn_percentages)
+        mean_alternating_turn_percentages = np.mean(alternating_turn_percentages)
         std_alternating_turn_percentages = np.std(alternating_turn_percentages)
+        sem = st.sem(alternating_turn_percentages)
+        ci_lower_bound, ci_upper_bound = st.t.interval(confidence=confidence, df=len(alternating_turn_percentages)-1,loc=mean_alternating_turn_percentages, scale=sem)
         print((f"name: {name}\n"
-               f"average percent: {average_alternating_turn_percentages:.1f}\n"
+               f"average percent: {mean_alternating_turn_percentages:.1f}\n"
                f"num paths: {len(alternating_turn_percentages)}\n"
-               f"std percent: {std_alternating_turn_percentages:.1f}\n"))
+               f"std percent: {std_alternating_turn_percentages:.1f}\n"
+               f"{confidence*100}% Confidence interval: ({ci_lower_bound:.1f}, {ci_upper_bound:.1f})\n"))
 
     # Calculate total alternating turn percentage
     total_alternating_turn_percentages = calculate_alternating_turn_percentage(directions_df, project_config.direction_columns)
-    average_total_alternating_turn_percentages = np.mean(total_alternating_turn_percentages)
+    total_mean_alternating_turn_percentages = np.mean(total_alternating_turn_percentages)
     std_total_alternating_turn_percentages = np.std(total_alternating_turn_percentages)
+    total_sem = st.sem(total_alternating_turn_percentages)
+    total_ci_lower_bound, total_ci_upper_bound = st.t.interval(confidence=confidence, df=len(total_alternating_turn_percentages)-1,loc=total_mean_alternating_turn_percentages, scale=total_sem)
     print(("Total\n"
-           f"average percent: {average_total_alternating_turn_percentages:.1f}\n"
+           f"average percent: {total_mean_alternating_turn_percentages:.1f}\n"
            f"num paths: {len(total_alternating_turn_percentages)}\n"
-           f"std percent: {std_total_alternating_turn_percentages:.1f}\n"))
+           f"std percent: {std_total_alternating_turn_percentages:.1f}\n"
+           f"{confidence*100}% Confidence interval: ({total_ci_lower_bound:.1f}, {total_ci_upper_bound:.1f})\n"))
 
 if __name__ == "__main__":
     main()
