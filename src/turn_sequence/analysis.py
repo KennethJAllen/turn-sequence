@@ -1,6 +1,7 @@
 """Turn sequence analysis module."""
 from pathlib import Path
 import ast
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import osmnx as ox
@@ -8,7 +9,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from turn_sequence.map_model import MapModel
 from turn_sequence import utils
-from turn_sequence.config import ProjectConfig, PointColumns, GoogleSheetConfig
+from turn_sequence.config import ProjectConfig, PointColumns, DirectionColumns, GoogleSheetConfig
 
 def get_all_dfs_from_gsheets(sheet_config: GoogleSheetConfig) -> tuple[pd.DataFrame]:
     """Gets the places, points, and directions dataframes from Google Sheets."""
@@ -27,21 +28,28 @@ def alternating_turn_metric(double_turns: list[str]) -> float:
             num_alternating_turns += 1
     return num_alternating_turns / len(double_turns)
 
-def place_alternating_turn_metric(name: str, places_df: pd.DataFrame, directions_df: pd.DataFrame, config: ProjectConfig) -> float:
-    """Returns fraction of turns that alternate either LEFT -> RIGHT or RIGHT -> LEFT for a given city."""
-    place_mask = places_df[config.place_columns.name] == name
-    place_id = places_df.loc[place_mask, config.place_columns.id].item()
-    directions_mask = directions_df[config.direction_columns.place_id] == place_id
-    double_turns_raw = directions_df.loc[directions_mask, config.direction_columns.direction_pairs]
+def calculate_alternating_turn_percentage(directions_df: pd.DataFrame, direction_columns: DirectionColumns) -> list[float]:
+    """Returns a list of percentages of turns that alternate either LEFT -> RIGHT or RIGHT -> LEFT for all paths in a dataframe."""
+    double_turns_raw = directions_df.loc[:, direction_columns.direction_pairs]
     # convert from string to list
     double_turns_sequence = double_turns_raw.apply(ast.literal_eval)
-    alternating_turns_sequence = []
+    alternating_turn_percentages = []
     for double_turns in double_turns_sequence:
         if not double_turns:
             continue
         fraction_alternating_turns = alternating_turn_metric(double_turns)
-        alternating_turns_sequence.append(fraction_alternating_turns)
-    return sum(alternating_turns_sequence) / len(alternating_turns_sequence)
+        percentage_alternating_turns = fraction_alternating_turns * 100
+        alternating_turn_percentages.append(percentage_alternating_turns)
+    return alternating_turn_percentages
+
+def place_alternating_turn_percentages(name: str, places_df: pd.DataFrame, directions_df: pd.DataFrame, config: ProjectConfig) -> list[float]:
+    """Returns a list of percentages of turns that alternate either LEFT -> RIGHT or RIGHT -> LEFT for all paths in a given city."""
+    place_mask = places_df[config.place_columns.name] == name
+    place_id = places_df.loc[place_mask, config.place_columns.id].item()
+    directions_mask = directions_df[config.direction_columns.place_id] == place_id
+    filtered_directions_df = directions_df[directions_mask]
+    alternating_turn_percentages = calculate_alternating_turn_percentage(filtered_directions_df, config.direction_columns)
+    return alternating_turn_percentages
 
 def plot_place_points_from_model(model: MapModel, point_columns: PointColumns, plot_path: Path) -> None:
     """Plots points on map."""
@@ -127,12 +135,28 @@ def main():
     plot_dir = Path.cwd() / "plots"
     plot_dir.mkdir(exist_ok=True)
 
+    # Calculate alternating turn percentage for each place
     for name in project_config.map_.places:
         plotname = name.lower().replace(', ', '_') + '.png'
         plot_path = plot_dir / plotname
         plot_place_points_from_df(name, points_df, project_config.point_columns, plot_path)
-        fraction_alternating_turns = place_alternating_turn_metric(name, places_df, directions_df, project_config)
-        print(f"{name} : {fraction_alternating_turns}")
+        alternating_turn_percentages = place_alternating_turn_percentages(name, places_df, directions_df, project_config)
+        #average_alternating_turns = sum(alternating_turn_metrics) / len(alternating_turn_metrics)
+        average_alternating_turn_percentages = np.mean(alternating_turn_percentages)
+        std_alternating_turn_percentages = np.std(alternating_turn_percentages)
+        print((f"name: {name}\n"
+               f"average percent: {average_alternating_turn_percentages:.1f}\n"
+               f"num paths: {len(alternating_turn_percentages)}\n"
+               f"std percent: {std_alternating_turn_percentages:.1f}\n"))
+
+    # Calculate total alternating turn percentage
+    total_alternating_turn_percentages = calculate_alternating_turn_percentage(directions_df, project_config.direction_columns)
+    average_total_alternating_turn_percentages = np.mean(total_alternating_turn_percentages)
+    std_total_alternating_turn_percentages = np.std(total_alternating_turn_percentages)
+    print(("Total\n"
+           f"average percent: {average_total_alternating_turn_percentages:.1f}\n"
+           f"num paths: {len(total_alternating_turn_percentages)}\n"
+           f"std percent: {std_total_alternating_turn_percentages:.1f}\n"))
 
 if __name__ == "__main__":
     main()
