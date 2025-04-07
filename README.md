@@ -2,11 +2,11 @@
 
 ## Summary
 
-Analyze the frequency of taking alternating direction turns while driving vs. taking consecutive same-direction turns. Uses Google Geocode API and Routes API.
+Analyze the frequency of taking alternating direction turns while driving compared taking consecutive same-direction turns. Uses Google Geocode API and Routes API, with [Google Sheets](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1705379481#gid=1705379481) as data storage.
 
-## Which Lane to Turn In?
+## Which Lane to Use When Turning?
 
-If there are multiple lanes to take a turn, while lane should you choose?
+Suppose you are driving and need to take a left. You have a choice between two lanes, the left lane or the right lane. If you don't know which direction you are going to turn next, which lane should you choose? If you are going to take a left turn next, you would rather be in the left lane, and if you are going to take a right turn next, you would rather be in the right lane so you don't need to change lanes.
 
 The hypothesis is choosing the right-most lane when taking a left turn, or the left-most lane when taking a right turn is optimal on average. This is because when traveling, each turn is an overcorrection towards your destination. For a simple model, if we are traveling on a grid, then any optimal path will alternate between left and right turns. In practice, we still make multiple of the same direction turns in a row. But how often? This project aims to answer that question.
 
@@ -90,9 +90,9 @@ The standard deviation for each location is large, ranging from about 15 to 20 p
 
 The proportion of alternating turns is slightly, but consistently, above 50%, with variability between cities. Meaning when taking a left turn, your next turn is most likely a right, and after taking a right turn, the next turn is most likely a left.
 
-It would be nice to gather more data, but the cost of Google Routes API calls is prohibitive, as it cost $264 of $300 of free Google Cloud credits to generate this data.
-
 ## Data
+
+It would be nice to gather more data, but the cost of Google Routes API calls is prohibitive, as it cost $264 of $300 of free Google Cloud credits to generate this data.
 
 Data is pulled from Google Roads and Routes APIs, processed, and stored in Google Sheets.
 
