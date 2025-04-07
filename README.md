@@ -86,7 +86,7 @@ These differences could stem from factors such as the city layout (e.g. one-way 
 
 The standard deviation for each location is large, ranging from about 15 to 20 percent, meaning there is large variability in turning patterns between routes.
 
-#### Conclusion
+### Conclusion
 
 The proportion of alternating turns is consistently above 50%, with a few exceptions. Many cities have 95% confidence intervals for the mean strictly above 50%.
 
