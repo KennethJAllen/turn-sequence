@@ -6,7 +6,7 @@ Analyze the frequency of taking alternating direction turns while driving compar
 
 ## Which Lane to Use When Turning?
 
-Suppose you are driving and need to take a left. You have a choice between two lanes, the left lane or the right lane. If you don't know which direction you are going to turn next, which lane should you choose? If you are going to take a left turn next, you would rather be in the left lane, and if you are going to take a right turn next, you would rather be in the right lane so you don't need to change lanes.
+Suppose you are driving and are taking a left. You have a choice between two lanes, the left lane or the right lane. If you don't know which direction you are going to turn next, which lane should you choose? If you are going to take a left next, you would rather be in the left lane, and if you are going to take a right next, you would rather be in the right lane so you don't need to change lanes.
 
 The hypothesis is choosing the right-most lane when taking a left turn, or the left-most lane when taking a right turn is optimal on average. This is because when traveling, each turn is an overcorrection towards your destination. For a simple model, if we are traveling on a grid, then any optimal path will alternate between left and right turns. In practice, we still make multiple of the same direction turns in a row. But how often? This project aims to answer that question.
 
@@ -111,7 +111,6 @@ While a SQL database would be more natural, Google Sheets has the convenient opt
 - Ensure that the UV package manager is installed.
 - Set up environment: `uv sync`
 - Build project `uv build`
-- To 
 
 ### Analysis
 
