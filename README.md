@@ -17,7 +17,7 @@ To answer this question, points are sampled in a city. Directions are clculated 
 ### How do you sample paths from a city?
 
 - Use `osmnx` to generate a geometric polygon from the city
-- Partition latitude and longitude into evenly spaced grid points equal to `map.granulariy` in `project_config.yaml`.
+- Partition latitude and longitude into evenly spaced grid points equal to `map.granularity` in `project_config.yaml`.
 - Check if each grid point is in the city polygon. Toss it if it is not.
 - Snap each grid point to the road with the Google Roads API.
     - If a point does not have a road nearby it is tossed. This is useful for city polygons like Boston's which have a large portion in the ocean.
@@ -137,6 +137,7 @@ OAuth credentials are required to write to Google Sheets.
 #### project_config.yaml
 - `map.places`: A list of locations to sample points from. Geocoded with the `osmnx` package.
 - `map.granularity`: The grid size granularity. Warning, this parameter should be kept small (12 or less) to avoid excessive calls to Google Routes.
+
 - `place_columns`: The column names in the [Places Google Worksheet](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1705379481#gid=1705379481) and dataframe.
 - `point_columns`: The column names in the [Point Google Worksheet](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1650120780#gid=1650120780) and dataframe.
 - `direction_columns`: The column names in the [Directions Google Worksheet](https://docs.google.com/spreadsheets/d/1-AbBNuG1uom7djGymecf2jKBZFztmmOv9t5yPM3L354/edit?gid=1040326083#gid=1040326083) and dataframe.

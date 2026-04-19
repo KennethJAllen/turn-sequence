@@ -18,9 +18,9 @@ def get_gsheet(config: ProjectConfig,
         config: Contains the names of the sheet and worksheet.
         email (optional): If you want to add your personal account as an editor
         publish (optional): Make the data public to anyone with the url.
-        reset (optional): Male reset the spreadsheet
+        reset (optional): Reset the spreadsheet
     """
-    gc = pygsheets.authorize(service_file=config.path.oatuth_credentials)
+    gc = pygsheets.authorize(service_file=config.path.oauth_credentials)
 
     try:
         # Try to open an existing spreadsheet

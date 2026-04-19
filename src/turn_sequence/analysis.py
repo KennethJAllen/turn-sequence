@@ -31,7 +31,7 @@ def alternating_turn_metric(double_turns: list[str]) -> float:
 
 def calculate_alternating_turn_percentage(directions_df: pd.DataFrame, direction_columns: DirectionColumns) -> list[float]:
     """Returns a list of percentages of turns that alternate either LEFT -> RIGHT or RIGHT -> LEFT for all paths in a dataframe."""
-    double_turns_raw = directions_df.loc[:, direction_columns.direction_pairs]
+    double_turns_raw = directions_df.loc[:, direction_columns.direction_pairs].dropna()
     # convert from string to list
     double_turns_sequence = double_turns_raw.apply(ast.literal_eval)
     alternating_turn_percentages = []
@@ -143,6 +143,10 @@ def main():
         plot_path = plot_dir / plotname
         plot_place_points_from_df(name, points_df, project_config.point_columns, plot_path)
         alternating_turn_percentages = place_alternating_turn_percentages(name, places_df, directions_df, project_config)
+        if len(alternating_turn_percentages) < 2:
+            print(f"name: {name}\n"
+                  f"insufficient data ({len(alternating_turn_percentages)} paths)\n")
+            continue
         mean_alternating_turn_percentages = np.mean(alternating_turn_percentages)
         std_alternating_turn_percentages = np.std(alternating_turn_percentages)
         sem = st.sem(alternating_turn_percentages)

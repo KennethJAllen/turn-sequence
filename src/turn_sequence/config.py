@@ -5,7 +5,7 @@ import yaml
 
 @dataclass
 class PathConfig:
-    oatuth_credentials: Path
+    oauth_credentials: Path
 
 @dataclass
 class SheetNamesConfig:
@@ -17,7 +17,7 @@ class SheetNamesConfig:
 @dataclass
 class MapConfig:
     places: list[str]
-    granulariy: int
+    granularity: int
 
 @dataclass
 class PlaceColumns:
@@ -116,7 +116,7 @@ def load_project_config(file_path: Path) -> ProjectConfig:
     with file_path.open('r') as f:
         data = yaml.safe_load(f)
 
-    path_config = PathConfig(oatuth_credentials=Path(data['paths']['oatuth_credentials']).expanduser())
+    path_config = PathConfig(oauth_credentials=Path(data['paths']['oauth_credentials']).expanduser())
     sheet_config = SheetNamesConfig(**data['sheet'])
     map_config = MapConfig(**data['map'])
     place_columns = PlaceColumns(**data['place_columns'])

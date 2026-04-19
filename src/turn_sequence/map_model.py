@@ -49,7 +49,7 @@ class PlacePoints:
     """
     Generates points within a given Place.
     1) Paritions a place into grid points
-    2) Splits bounding box into granulariy x granularity points
+    2) Splits bounding box into granularity x granularity points
     3) Rejects points that are not within the place
     """
     def __init__(self, place: Place, map_granularity: int, point_columns: PointColumns, api_key: str = None):
@@ -161,7 +161,7 @@ class PlacePoints:
 class Directions:
     """
     Handles directions between place points.
-    If choose_n_random is provided, chooses n random points to compute pairwise directions
+    If choose_random is provided, chooses n random points to compute pairwise directions
     instead of computing pairwise directions for all snapped points.
     Otherwise, computes all pairwise directions for all snapped points.
 
@@ -173,13 +173,15 @@ class Directions:
                  api_key: str,
                  choose_random: int = None):
         self.points = points
-        snapped_points = [snapped_point for snapped_point in self.points.snapped_points if snapped_point is not None]
+        indexed_points = [
+            (grid_id, snapped_point)
+            for grid_id, snapped_point in enumerate(self.points.snapped_points)
+            if snapped_point is not None
+        ]
         if choose_random is not None:
-            random.shuffle(snapped_points)
-            points = snapped_points[:choose_random]
-        else:
-            points = snapped_points
-        self.df = self._to_df(points, direction_columns, api_key)
+            random.shuffle(indexed_points)
+            indexed_points = indexed_points[:choose_random]
+        self.df = self._to_df(indexed_points, direction_columns, api_key)
 
     def __len__(self):
         return len(self.df)
@@ -210,12 +212,13 @@ class Directions:
         utils.check_for_errors(route_data)
         return route_data
 
-    def _to_df(self, points: list[Point], direction_columns: DirectionColumns, api_key: str) -> pd.DataFrame:
+    def _to_df(self, indexed_points: list[tuple[int, Point]], direction_columns: DirectionColumns, api_key: str) -> pd.DataFrame:
         """
-        Finds and processes pairwise directions for all pairwise points in points.
+        Finds and processes pairwise directions for all pairwise points in indexed_points.
+        Each entry is a (grid_id, Point) pair; grid_id is the PlacePoints id for the foreign-key columns.
         Uses Google Routes API to find directions.
         returns data formatted as dataframe.
-        WARNING: if there are n points in points, this functions makes O(n^2) API calls to find all pairwise directions.
+        WARNING: if there are n points in indexed_points, this functions makes O(n^2) API calls to find all pairwise directions.
         """
         origin_id_col = []
         destination_id_col = []
@@ -224,8 +227,8 @@ class Directions:
         direction_pairs_col = []
         distance_km_col = []
 
-        for origin_id, origin in enumerate(points):
-            for destination_id, destination in enumerate(points):
+        for origin_id, origin in indexed_points:
+            for destination_id, destination in indexed_points:
                 if origin == destination:
                     continue
                 route_data = self._get_route_data(origin, destination, api_key)
@@ -265,7 +268,7 @@ class MapModel:
     def __init__(self, name: str, config: ProjectConfig, api_key: str=None):
         self.place = Place(name, config.place_columns)
         self.points = PlacePoints(self.place,
-                                  config.map_.granulariy,
+                                  config.map_.granularity,
                                   config.point_columns,
                                   api_key=api_key)
         if api_key is not None:

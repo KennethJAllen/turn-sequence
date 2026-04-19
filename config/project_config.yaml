@@ -1,5 +1,5 @@
 paths:
-  oatuth_credentials: "~/.credentials/sheets_oauth.json"
+  oauth_credentials: "~/.credentials/sheets_oauth.json"
 
 sheet:
   name: "TurnSequence"
@@ -25,7 +25,7 @@ map:
     "Mumbai, India",
     "Singapore"
     ]
-  granulariy: ~
+  granularity: ~
 
 place_columns:
   id: "osm_id"

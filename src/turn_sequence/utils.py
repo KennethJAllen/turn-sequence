@@ -6,7 +6,7 @@ from pygsheets import Worksheet
 def format_route_body(origin: Point, destination: Point) -> dict:
     """
     Formats post request body for Google Routes API.
-    Point.x is lattitude, Point.y is longitude.
+    Point.x is longitude, Point.y is latitude.
     """
     body = {
         "origin": {
@@ -39,10 +39,19 @@ def get_maneuvers_from_routes(routes: dict) -> list[str]:
     Given the route response from Google Routes API,
     process response into list of maneuvers.
     """
-    if not routes:
+    if not routes or not routes.get("routes"):
         return []
-    steps = routes["routes"][0]['legs'][0]['steps']
-    maneuvers = [step['navigationInstruction']['maneuver'] for step in steps if step]
+    legs = routes["routes"][0].get("legs") or []
+    if not legs:
+        return []
+    steps = legs[0].get("steps") or []
+    maneuvers = []
+    for step in steps:
+        if not step:
+            continue
+        instruction = step.get("navigationInstruction")
+        if instruction and "maneuver" in instruction:
+            maneuvers.append(instruction["maneuver"])
     return maneuvers
 
 def get_turns_from_maneuvers(maneuvers: list[str]) -> list[str]:
